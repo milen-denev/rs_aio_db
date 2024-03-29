@@ -1,0 +1,11 @@
+[package]
+name = "rs_aio_db"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+libsql = "0.3.2"
+bevy_reflect = "0.13.1"
+tokio = "1.37.0"
