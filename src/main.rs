@@ -13,5 +13,7 @@ struct Test {
 
 #[tokio::main]
 async fn main() {
-    AioDatabase::create::<Test>("G:\\".into(), "test.db".into()).await;
+    std::env::set_var("RUST_LOG", "debug");
+    env_logger::init();
+    AioDatabase::create::<Test>("G:\\".into(), "Test".into()).await;
 }
