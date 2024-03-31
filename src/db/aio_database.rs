@@ -1,3 +1,6 @@
+use std::sync::Arc;
+use std::sync::RwLock;
+
 use bevy_reflect::Struct;
 use libsql::Connection;
 use libsql::Builder;
@@ -11,11 +14,12 @@ use crate::db::internal::queries::alter_table_new_column;
 use super::internal::helpers::get_schema_from_generic;
 use super::internal::queries::create_table;
 use super::internal::queries::get_current_db_schema;
+use super::internal::queries::insert_value;
 use super::models::Schema;
 
 pub struct AioDatabase {
      name: String,
-     conn: Connection,
+     conn: Arc<RwLock<Connection>>,
      schema: Vec<Schema>
 }
 
@@ -48,12 +52,51 @@ impl AioDatabase {
                }
           }
           else {
+               debug!("Creating table {} with schema: {:?}", name, generic_schema);
                create_table(&generic_schema, &name, &connection).await;
           }
 
           AioDatabase {
                name: name,
-               conn: connection,
+               conn: Arc::new(RwLock::new(connection)),
+               schema: generic_schema
+          }
+     }
+
+     pub async fn create_in_memory<T:  Default + Struct>(name: String) -> AioDatabase {
+          let builder = Builder::new_local(":memory:").build().await.unwrap();
+          let connection = builder.connect().unwrap();
+          
+          let generic_schema = get_schema_from_generic::<T>();
+          let current_schema_option = get_current_db_schema(&name, &connection).await;
+
+          if let Some(current_schema) = current_schema_option {
+               debug!("Current Db schema: {:?}", current_schema);
+
+               for current in current_schema.iter() {
+                    if !generic_schema.iter().any(|x| x.field_name == current.field_name) {
+                         info!("Dropping column: {}", current.field_name.as_str());
+                         alter_table_drop_column(&name, current.field_name.as_str(), &connection).await;
+                         continue;
+                    }
+               }
+
+               for generic_field in generic_schema.iter() {
+                    if !current_schema.iter().any(|x| x.field_name == generic_field.field_name) {
+                         info!("Adding column: {} as {}", generic_field.field_name.as_str(), generic_field.field_type.as_str());
+                         alter_table_new_column(&name, generic_field, &connection).await;
+                         continue;
+                    }
+               }
+          }
+          else {
+               debug!("Creating table {} with schema: {:?}", name, generic_schema);
+               create_table(&generic_schema, &name, &connection).await;
+          }
+
+          AioDatabase {
+               name: name,
+               conn: Arc::new(RwLock::new(connection)),
                schema: generic_schema
           }
      }
@@ -66,7 +109,9 @@ impl AioDatabase {
           return &self.schema;
      }
 
-     pub fn get_raw_connection(&self) -> &Connection {
-          return &self.conn;
+     pub async fn insert_value<T:  Default + Struct + Clone>(&self, value: T) {
+          let r_connection = self.conn.clone();
+          let conn = r_connection.read().unwrap();
+          insert_value::<T>(&value, self.get_name(), &conn).await;
      }
 }

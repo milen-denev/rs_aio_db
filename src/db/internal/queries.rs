@@ -1,6 +1,8 @@
+use bevy_reflect::Struct;
 use libsql::Connection;
+use log::debug;
 use crate::db::models::Schema;
-use super::schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type};
+use super::{helpers::get_values_from_generic, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
 
 pub async fn create_table(schema_vec: &Vec<Schema>, name: &str, connection: &Connection) {
      let create_table_script = generate_db_schema_query(schema_vec, name);
@@ -47,6 +49,36 @@ pub async fn alter_table_new_column(name: &str, schema: &Schema, connection: &Co
 
 pub async fn alter_table_drop_column(name: &str, column_name: &str, connection: &Connection) {
      let query = format!("ALTER TABLE {name} DROP COLUMN {column_name}");
+
+     connection.execute(&query, ())
+          .await
+          .unwrap();
+}
+
+pub async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &str, connection: &Connection) {
+     let generic_values = get_values_from_generic::<T>(value);
+     let mut query = format!("INSERT INTO {} (", table_name);
+
+     for generic_value in generic_values.iter().take(generic_values.len() - 1) {
+          query.push_str(generic_value.field_name.as_str());
+          query.push(',');
+     }
+
+     query.push_str(generic_values.iter().last().unwrap().field_name.as_str());
+     query.push(')');
+
+
+     query.push_str(" VALUES (");
+
+     for generic_value in generic_values.iter().take(generic_values.len() - 1) {
+          query.push_str(format!("{:?}", generic_value.field_value).as_str());
+          query.push(',');
+     }
+
+     query.push_str(format!("{:?}", generic_values.last().unwrap().field_value).as_str());
+     query.push(')');
+
+     debug!("Executing insert query: {}", query);
 
      connection.execute(&query, ())
           .await
