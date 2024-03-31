@@ -1,9 +1,11 @@
 use bevy_reflect::Reflect;
+use db::aio_query::Query;
+use serde::Deserialize;
 use crate::db::aio_database::AioDatabase;
 
 pub mod db;
 
-#[derive(Reflect, Default, Clone)]
+#[derive(Reflect, Default, Clone, Deserialize, Debug)]
 struct Test {
     name: String,
     test: i32,
@@ -22,4 +24,7 @@ async fn main() {
         test2: 16
     }).await;
 
+    let test = file_db.get_single_value::<Test>(Query { final_query_str: "".into() }).await;
+
+    println!("{:?}", test);
 }

@@ -6,14 +6,18 @@ use libsql::Connection;
 use libsql::Builder;
 use log::debug;
 use log::info;
+use serde::Deserialize;
 
 use crate::db::internal::helpers::get_system_char_delimiter;
 use crate::db::internal::queries::alter_table_drop_column;
 use crate::db::internal::queries::alter_table_new_column;
 
+use super::aio_query::Query;
+use super::aio_query::QueryRowResult;
 use super::internal::helpers::get_schema_from_generic;
 use super::internal::queries::create_table;
 use super::internal::queries::get_current_db_schema;
+use super::internal::queries::get_single_value;
 use super::internal::queries::insert_value;
 use super::models::Schema;
 
@@ -24,7 +28,7 @@ pub struct AioDatabase {
 }
 
 impl AioDatabase {
-     pub async fn create<T:  Default + Struct>(location: String, name: String) -> AioDatabase {
+     pub async fn create<'a, T:  Default + Struct + Clone + Deserialize<'a>>(location: String, name: String) -> AioDatabase {
           let db_location = format!("{}{}{}{}", location, get_system_char_delimiter(), name, ".db");
           let builder = Builder::new_local(db_location).build().await.unwrap();
           let connection = builder.connect().unwrap();
@@ -63,7 +67,7 @@ impl AioDatabase {
           }
      }
 
-     pub async fn create_in_memory<T:  Default + Struct>(name: String) -> AioDatabase {
+     pub async fn create_in_memory<'a, T:  Default + Struct + Clone + Deserialize<'a>>(name: String) -> AioDatabase {
           let builder = Builder::new_local(":memory:").build().await.unwrap();
           let connection = builder.connect().unwrap();
           
@@ -109,9 +113,20 @@ impl AioDatabase {
           return &self.schema;
      }
 
-     pub async fn insert_value<T:  Default + Struct + Clone>(&self, value: T) {
+     pub async fn insert_value<'a, T:  Default + Struct + Clone + Deserialize<'a>>(&self, value: T) {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
-          insert_value::<T>(&value, self.get_name(), &conn).await;
+          insert_value::<T>(&value, self.get_name(), conn).await;
+     }
+
+     pub async fn get_single_value<'a, T: Default + Struct + Clone + Deserialize<'a>>(&self, query: Query) -> Option<T> {
+          let r_connection = self.conn.clone();
+          let conn = r_connection.read().unwrap();
+
+          let mut query_result = QueryRowResult::<T>::new(query.final_query_str, self.get_name(), &conn).await;
+          
+          get_single_value::<T>(&mut query_result).await;
+
+          return query_result.value;
      }
 }

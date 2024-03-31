@@ -1,8 +1,11 @@
+use std::sync::{Arc, RwLockReadGuard};
+
 use bevy_reflect::Struct;
-use libsql::Connection;
+use libsql::{de, Connection, Row};
 use log::debug;
-use crate::db::models::Schema;
-use super::{helpers::get_values_from_generic, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
+use serde::Deserialize;
+use crate::db::{aio_query::QueryRowResult, internal::helpers::get_values_from_generic, models::Schema};
+use super::{helpers::set_values_from_row_result, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
 
 pub async fn create_table(schema_vec: &Vec<Schema>, name: &str, connection: &Connection) {
      let create_table_script = generate_db_schema_query(schema_vec, name);
@@ -55,7 +58,7 @@ pub async fn alter_table_drop_column(name: &str, column_name: &str, connection: 
           .unwrap();
 }
 
-pub async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &str, connection: &Connection) {
+pub async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &str, connection: RwLockReadGuard<'_, Connection>) {
      let generic_values = get_values_from_generic::<T>(value);
      let mut query = format!("INSERT INTO {} (", table_name);
 
@@ -83,4 +86,17 @@ pub async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &
      connection.execute(&query, ())
           .await
           .unwrap();
+
+     drop(connection);
+}
+
+pub struct Test<T> {
+     pub row: Row,
+     pub value: T
+}
+
+pub async fn get_single_value<'a, T:  Default + Struct + Clone + Deserialize<'a>>(
+     query_result: &mut QueryRowResult<T>) {    
+     let result = set_values_from_row_result::<T>(query_result);
+     query_result.value = Some(result);
 }
