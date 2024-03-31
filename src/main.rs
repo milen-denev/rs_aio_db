@@ -1,11 +1,10 @@
 use bevy_reflect::Reflect;
 use db::aio_query::Query;
-use serde::Deserialize;
 use crate::db::aio_database::AioDatabase;
 
 pub mod db;
 
-#[derive(Reflect, Default, Clone, Deserialize, Debug)]
+#[derive(Reflect, Default, Clone, Debug)]
 struct Test {
     name: String,
     test: i32,

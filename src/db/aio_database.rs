@@ -6,7 +6,6 @@ use libsql::Connection;
 use libsql::Builder;
 use log::debug;
 use log::info;
-use serde::Deserialize;
 
 use crate::db::internal::helpers::get_system_char_delimiter;
 use crate::db::internal::queries::alter_table_drop_column;
@@ -28,7 +27,7 @@ pub struct AioDatabase {
 }
 
 impl AioDatabase {
-     pub async fn create<'a, T:  Default + Struct + Clone + Deserialize<'a>>(location: String, name: String) -> AioDatabase {
+     pub async fn create<'a, T:  Default + Struct + Clone>(location: String, name: String) -> AioDatabase {
           let db_location = format!("{}{}{}{}", location, get_system_char_delimiter(), name, ".db");
           let builder = Builder::new_local(db_location).build().await.unwrap();
           let connection = builder.connect().unwrap();
@@ -67,7 +66,7 @@ impl AioDatabase {
           }
      }
 
-     pub async fn create_in_memory<'a, T:  Default + Struct + Clone + Deserialize<'a>>(name: String) -> AioDatabase {
+     pub async fn create_in_memory<'a, T:  Default + Struct + Clone>(name: String) -> AioDatabase {
           let builder = Builder::new_local(":memory:").build().await.unwrap();
           let connection = builder.connect().unwrap();
           
@@ -113,13 +112,13 @@ impl AioDatabase {
           return &self.schema;
      }
 
-     pub async fn insert_value<'a, T:  Default + Struct + Clone + Deserialize<'a>>(&self, value: T) {
+     pub async fn insert_value<'a, T:  Default + Struct + Clone>(&self, value: T) {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
           insert_value::<T>(&value, self.get_name(), conn).await;
      }
 
-     pub async fn get_single_value<'a, T: Default + Struct + Clone + Deserialize<'a>>(&self, query: Query) -> Option<T> {
+     pub async fn get_single_value<'a, T: Default + Struct + Clone>(&self, query: Query) -> Option<T> {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
 

@@ -1424,7 +1424,6 @@ dependencies = [
  "env_logger",
  "libsql",
  "log",
- "serde",
  "tokio",
 ]
 

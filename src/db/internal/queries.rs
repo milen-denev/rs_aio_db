@@ -3,7 +3,6 @@ use std::sync::{Arc, RwLockReadGuard};
 use bevy_reflect::Struct;
 use libsql::{de, Connection, Row};
 use log::debug;
-use serde::Deserialize;
 use crate::db::{aio_query::QueryRowResult, internal::helpers::get_values_from_generic, models::Schema};
 use super::{helpers::set_values_from_row_result, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
 
@@ -95,7 +94,7 @@ pub struct Test<T> {
      pub value: T
 }
 
-pub async fn get_single_value<'a, T:  Default + Struct + Clone + Deserialize<'a>>(
+pub async fn get_single_value<'a, T:  Default + Struct + Clone>(
      query_result: &mut QueryRowResult<T>) {    
      let result = set_values_from_row_result::<T>(query_result);
      query_result.value = Some(result);
