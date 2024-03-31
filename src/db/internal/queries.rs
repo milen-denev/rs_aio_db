@@ -89,13 +89,7 @@ pub async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &
      drop(connection);
 }
 
-pub struct Test<T> {
-     pub row: Row,
-     pub value: T
-}
-
-pub async fn get_single_value<'a, T:  Default + Struct + Clone>(
-     query_result: &mut QueryRowResult<T>) {    
+pub async fn get_single_value<'a, T:  Default + Struct + Clone>(query_result: &mut QueryRowResult<T>) {    
      let result = set_values_from_row_result::<T>(query_result);
      query_result.value = Some(result);
 }

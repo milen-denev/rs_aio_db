@@ -2,6 +2,8 @@ use std::sync::Arc;
 
 use libsql::{Connection, Row};
 
+//let query = format!("SELECT * FROM {table_name} WHERE test2 = 16");
+
 pub struct QueryBuilder {
      
 }
@@ -19,23 +21,27 @@ pub struct QueryRowResult<T> {
 impl<T> QueryRowResult<T> {
      pub async fn new(
           query: String, 
-          table_name: &str,
-          connection: &Connection) -> QueryRowResult<T> {
-
-          let query = format!("SELECT * FROM {table_name} WHERE test2 = 16");
-
-          let row = connection
+          connection: &Connection) -> Option<QueryRowResult<T>> { 
+          let row_result = connection
                .query(&query, ())
                .await
                .unwrap()
                .next()
-               .await
-               .unwrap()
-               .unwrap();
-
-          return QueryRowResult::<T> {
-               value: None,
-               row: Arc::new(row)
+               .await;
+               
+          if let Ok(row_option) = row_result {
+               if let Some(row) = row_option {
+                    return Some(QueryRowResult::<T> {
+                         value: None,
+                         row: Arc::new(row)
+                    });
+               }
+               else {
+                    return None;
+               }
+          }
+          else {
+               return None;
           }
      }
 }

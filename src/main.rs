@@ -26,4 +26,6 @@ async fn main() {
     let test = file_db.get_single_value::<Test>(Query { final_query_str: "".into() }).await;
 
     println!("{:?}", test);
+
+    
 }

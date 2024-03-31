@@ -122,10 +122,12 @@ impl AioDatabase {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
 
-          let mut query_result = QueryRowResult::<T>::new(query.final_query_str, self.get_name(), &conn).await;
-          
-          get_single_value::<T>(&mut query_result).await;
-
-          return query_result.value;
+          if let Some(mut query_result) = QueryRowResult::<T>::new(query.final_query_str, &conn).await {
+               get_single_value::<T>(&mut query_result).await;
+               return query_result.value;
+          }
+          else {
+               return None;
+          }
      }
 }
