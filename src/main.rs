@@ -7,7 +7,7 @@ pub mod db;
 struct Test {
     name: String,
     test: i32,
-    test2:i32
+    test2: i32
 }
 
 #[tokio::main]

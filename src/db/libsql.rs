@@ -41,7 +41,7 @@ impl AioDatabase {
 
                for generic_field in generic_schema.iter() {
                     if !current_schema.iter().any(|x| x.field_name == generic_field.field_name) {
-                         info!("Adding column: {}", generic_field.field_name.as_str());
+                         info!("Adding column: {} as {}", generic_field.field_name.as_str(), generic_field.field_type.as_str());
                          alter_table_new_column(&name, generic_field, &connection).await;
                          continue;
                     }
@@ -64,5 +64,9 @@ impl AioDatabase {
 
      pub fn get_schema(&self) -> &Vec<Schema> {
           return &self.schema;
+     }
+
+     pub fn get_raw_connection(&self) -> &Connection {
+          return &self.conn;
      }
 }

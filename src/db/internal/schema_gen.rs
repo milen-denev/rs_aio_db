@@ -1,5 +1,3 @@
-use libsql::Connection;
-
 use crate::db::models::Schema;
 
 pub fn get_sql_type(rust_type: &str) -> Option<String> {
