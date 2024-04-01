@@ -1,5 +1,5 @@
 use rs_aio_db::db::aio_query::{Next, Operator};
-use rs_aio_db::db::{self, aio_database::AioDatabase};
+use rs_aio_db::db::aio_database::AioDatabase;
 use rs_aio_db::Reflect;
 
 #[derive(Default, Clone, Debug, Reflect)]
