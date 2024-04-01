@@ -22,7 +22,11 @@ bevy_reflect = "0.13.1"
 
 ### main.rs
 ```rust
-#[derive(Reflect, Default, Clone, Debug)]
+use rs_aio_db::db::aio_query::{Next, Operator};
+use rs_aio_db::db::aio_database::AioDatabase;
+use rs_aio_db::Reflect;
+
+#[derive(Default, Clone, Debug, Reflect)]
 struct Person {
     name: String,
     age: i32,
