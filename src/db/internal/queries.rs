@@ -6,7 +6,7 @@ use log::debug;
 use crate::db::{aio_query::{QueryBuilder, QueryRowResult, QueryRowsResult}, internal::helpers::{get_values_from_generic, query_match_operators}, models::Schema};
 use super::{helpers::set_values_from_row_result, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
 
-pub async fn create_table(schema_vec: &Vec<Schema>, name: &str, connection: &Connection) {
+pub(crate) async fn create_table(schema_vec: &Vec<Schema>, name: &str, connection: &Connection) {
      let create_table_script = generate_db_schema_query(schema_vec, name);
      
      connection.execute(&create_table_script, ())
@@ -14,7 +14,7 @@ pub async fn create_table(schema_vec: &Vec<Schema>, name: &str, connection: &Con
           .unwrap();
 }
 
-pub async fn get_current_db_schema(name: &str, connection: &Connection) -> Option<Vec<Schema>> {   
+pub(crate) async fn get_current_db_schema(name: &str, connection: &Connection) -> Option<Vec<Schema>> {   
      let mut stmt = connection
           .prepare("SELECT sql FROM sqlite_schema WHERE name = ?1")
           .await
@@ -38,7 +38,7 @@ pub async fn get_current_db_schema(name: &str, connection: &Connection) -> Optio
      }
 }
 
-pub async fn alter_table_new_column(name: &str, schema: &Schema, connection: &Connection) {
+pub(crate) async fn alter_table_new_column(name: &str, schema: &Schema, connection: &Connection) {
      let sql_type = get_sql_type(schema.field_type.as_str()).unwrap();
      let column_name = schema.field_name.as_str();
 
@@ -49,7 +49,7 @@ pub async fn alter_table_new_column(name: &str, schema: &Schema, connection: &Co
           .unwrap();
 }
 
-pub async fn alter_table_drop_column(name: &str, column_name: &str, connection: &Connection) {
+pub(crate) async fn alter_table_drop_column(name: &str, column_name: &str, connection: &Connection) {
      let query = format!("ALTER TABLE {name} DROP COLUMN {column_name}");
 
      connection.execute(&query, ())
@@ -57,7 +57,7 @@ pub async fn alter_table_drop_column(name: &str, column_name: &str, connection: 
           .unwrap();
 }
 
-pub async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &str, connection: RwLockReadGuard<'_, Connection>) {
+pub(crate) async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &str, connection: RwLockReadGuard<'_, Connection>) {
      let generic_values = get_values_from_generic::<T>(value);
      let mut query = format!("INSERT INTO {} (", table_name);
 
@@ -89,7 +89,7 @@ pub async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &
      drop(connection);
 }
 
-pub fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder: &'a QueryBuilder<'_>) -> String {    
+pub(crate) fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder: &'a QueryBuilder<'_>) -> String {    
      let options = &query_builder.query_options;
      let table_name = &query_builder.table_name;
      let mut query = format!("SELECT * FROM {table_name} WHERE ");
@@ -115,7 +115,7 @@ pub fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder: &'a Q
      return query;
 }
 
-pub fn generate_where_query<'a, T:  Default + Struct + Clone>(query_builder: &'a QueryBuilder<'_>) -> String {    
+pub(crate) fn generate_where_query<'a, T:  Default + Struct + Clone>(query_builder: &'a QueryBuilder<'_>) -> String {    
      let options = &query_builder.query_options;
      let mut query = format!("WHERE ");
 
@@ -140,7 +140,7 @@ pub fn generate_where_query<'a, T:  Default + Struct + Clone>(query_builder: &'a
      return query;
 }
 
-pub async fn update_value<T:  Default + Struct + Clone>(
+pub(crate) async fn update_value<T:  Default + Struct + Clone>(
      value: &T, 
      table_name: &str, 
      where_query: &str, 
@@ -177,7 +177,7 @@ pub async fn update_value<T:  Default + Struct + Clone>(
      return rows_affected;
 }
 
-pub async fn delete_value<T:  Default + Struct + Clone>(
+pub(crate) async fn delete_value<T:  Default + Struct + Clone>(
      table_name: &str, 
      where_query: &str, 
      connection: RwLockReadGuard<'_, Connection>) -> u64 {
@@ -195,12 +195,12 @@ pub async fn delete_value<T:  Default + Struct + Clone>(
      return rows_affected;
 }
 
-pub fn get_single_value<'a, T:  Default + Struct + Clone>(query_result: &mut QueryRowResult<T>) {    
+pub(crate) fn get_single_value<'a, T:  Default + Struct + Clone>(query_result: &mut QueryRowResult<T>) {    
      let result = set_values_from_row_result::<T>(query_result);
      query_result.value = Some(result);
 }
 
-pub async fn get_many_values<'a, T:  Default + Struct + Clone>(query_result: &mut QueryRowsResult<T>) { 
+pub(crate) async fn get_many_values<'a, T:  Default + Struct + Clone>(query_result: &mut QueryRowsResult<T>) { 
      let arc_rows = query_result.rows.clone();
      let mut rows = arc_rows.write().unwrap();
 

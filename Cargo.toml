@@ -2,6 +2,11 @@
 name = "rs_aio_db"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/milen-denev/rs_aio_db"
+license = "Apache-2.0"
+keywords = ["database", "libsql", "sqlite"]
+authors = ["Milen Denev"]
+description = "All in one (aka Aio) database with async support. Based on libsql/Sqlite, bevy_reflect and tokio, includes a dead simple API to be used (no SQL needed just pure Rust). Comes with automigration."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

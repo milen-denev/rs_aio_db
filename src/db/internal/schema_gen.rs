@@ -1,6 +1,6 @@
 use crate::db::models::Schema;
 
-pub fn get_sql_type(rust_type: &str) -> Option<String> {
+pub(crate) fn get_sql_type(rust_type: &str) -> Option<String> {
      match rust_type {
           "bool" => return Some("NUMERIC".into()),
           "u8" => return Some("INTEGER".into()),
@@ -21,14 +21,14 @@ pub fn get_sql_type(rust_type: &str) -> Option<String> {
      }
 }
 
-pub fn get_current_schema(query_result: String) -> Vec<Schema> {
+pub(crate) fn get_current_schema(query_result: String) -> Vec<Schema> {
      let content = extract_parentheses_contents(&query_result).unwrap();
      let list = split_by_comma(&content);
      let schema = split_by_empty_space(list);
      return schema;
 }
 
-pub fn extract_parentheses_contents(input: &str) -> Option<String> {
+pub(crate) fn extract_parentheses_contents(input: &str) -> Option<String> {
      let mut result = String::new();
      let mut in_parentheses = false;
  
@@ -55,11 +55,11 @@ pub fn extract_parentheses_contents(input: &str) -> Option<String> {
      }
 }
 
-pub fn split_by_comma(input: &str) -> Vec<&str> {
+pub(crate) fn split_by_comma(input: &str) -> Vec<&str> {
      return input.split(',').map(|s| s.trim()).collect();
 }
 
-pub fn split_by_empty_space(input: Vec<&str>) -> Vec<Schema> {
+pub(crate) fn split_by_empty_space(input: Vec<&str>) -> Vec<Schema> {
      let mut list: Vec<Schema> = Vec::new();
 
      for field in input {
@@ -73,7 +73,7 @@ pub fn split_by_empty_space(input: Vec<&str>) -> Vec<Schema> {
      return list;
 }
 
-pub fn generate_db_schema_query(schema_vec: &Vec<Schema>, name: &str) -> String {
+pub(crate) fn generate_db_schema_query(schema_vec: &Vec<Schema>, name: &str) -> String {
      let mut create_table = format!("CREATE TABLE IF NOT EXISTS {} (", name);
                
      for new_field in schema_vec.iter().take(schema_vec.len() - 1) {

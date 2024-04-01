@@ -1,3 +1,3 @@
-pub mod schema_gen;
-pub mod helpers;
-pub mod queries;
+pub(crate) mod schema_gen;
+pub(crate) mod helpers;
+pub(crate) mod queries;

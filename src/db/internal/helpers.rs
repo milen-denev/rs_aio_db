@@ -1,9 +1,9 @@
-use bevy_reflect::{DynamicStruct, GetField, Reflect, ReflectMut, ReflectRef, Struct};
+use bevy_reflect::{ GetField, ReflectMut, ReflectRef, Struct};
 use log::{debug, info};
 
 use crate::db::{aio_query::{Next, Operator, QueryRowResult}, models::{GenericValue, Schema}};
 
-pub fn get_system_char_delimiter() -> &'static str {
+pub(crate) fn get_system_char_delimiter() -> &'static str {
      let os = std::env::consts::OS;
      if os == "windows" {
          "\\"
@@ -16,7 +16,7 @@ pub fn get_system_char_delimiter() -> &'static str {
      }
 }
 
-pub fn get_schema_from_generic<T:  Default + Struct>() -> Vec<Schema> {  
+pub(crate) fn get_schema_from_generic<T:  Default + Struct>() -> Vec<Schema> {  
      let default_t = T::default();
      let default_t2 = T::default();
      let my_struct: Box<dyn Struct> = Box::new(default_t);
@@ -40,7 +40,7 @@ pub fn get_schema_from_generic<T:  Default + Struct>() -> Vec<Schema> {
      return schema_vec;
 }
 
-pub fn get_values_from_generic<'a, T:  Default + Struct + Clone>(value: &'a T) -> Vec<GenericValue> {  
+pub(crate) fn get_values_from_generic<'a, T:  Default + Struct + Clone>(value: &'a T) -> Vec<GenericValue> {  
      let copied_value = value.clone();
      let my_struct: Box<dyn Struct> = Box::new(copied_value);
 
@@ -66,7 +66,7 @@ pub fn get_values_from_generic<'a, T:  Default + Struct + Clone>(value: &'a T) -
      return schema_vec;
 }
 
-pub fn set_values_from_row_result<'a, T:  Default + Struct + Clone>(row_result: &QueryRowResult<T>) -> T {  
+pub(crate) fn set_values_from_row_result<'a, T:  Default + Struct + Clone>(row_result: &QueryRowResult<T>) -> T {  
      let mut struct_mut2: Box<dyn Struct> = Box::new(T::default());
      let ReflectMut::Struct(reflected2) = struct_mut2.reflect_mut() else { unreachable!() };
      let struct_immutable: Box<dyn Struct> = Box::new(T::default());
@@ -135,7 +135,7 @@ pub fn set_values_from_row_result<'a, T:  Default + Struct + Clone>(row_result: 
      return t_struct;
 }
 
-pub fn get_next(next: &Next) -> String {
+pub(crate) fn get_next(next: &Next) -> String {
      if next == &Next::And {
           return "AND".into();
      }
@@ -144,7 +144,7 @@ pub fn get_next(next: &Next) -> String {
      }
 }
 
-pub fn get_end_value(value: &str, field_type: &str) -> String{
+pub(crate) fn get_end_value(value: &str, field_type: &str) -> String{
      let end_value: String;
      if field_type == "String" {
           end_value = format!("'{}'", value);
@@ -156,7 +156,7 @@ pub fn get_end_value(value: &str, field_type: &str) -> String{
      return end_value;
 }
 
-pub fn push_str_to_query_string(
+pub(crate) fn push_str_to_query_string(
      query_string: &mut String, 
      field_name: &str, 
      end_value: &str, 
@@ -173,7 +173,7 @@ pub fn push_str_to_query_string(
      }
 }
 
-pub fn query_match_operators(
+pub(crate) fn query_match_operators(
      operator: &Operator, 
      query_string: &mut String, 
      field_name: &str, 

@@ -122,13 +122,13 @@ impl QueryOption<'_> {
 }
 
 #[derive(Clone)]
-pub struct QueryRowResult<T> {
+pub(crate) struct QueryRowResult<T> {
      pub value: Option<T>,
      pub row: Arc<Row>
 }
 
 impl<T> QueryRowResult<T> {
-     pub async fn new(
+     pub(crate) async fn new(
           query: String, 
           connection: &Connection) -> Option<QueryRowResult<T>> { 
           let row_result = connection
@@ -156,13 +156,13 @@ impl<T> QueryRowResult<T> {
 }
 
 #[derive(Clone)]
-pub struct QueryRowsResult<T> {
+pub(crate) struct QueryRowsResult<T> {
      pub value: Option<Vec<T>>,
      pub rows: Arc<RwLock<Rows>>
 }
 
 impl<T> QueryRowsResult<T> {
-     pub async fn new_many(
+     pub(crate) async fn new_many(
           query: String, 
           connection: &Connection) -> Option<QueryRowsResult<T>> { 
           let rows = connection
