@@ -8,7 +8,7 @@
 - Create records, retrieve one or many, update them or delete them with a dead simple ORM-like API.
 - Performance: To be determined (relies on bevy_reflect and libsql)
 - Async Support with Tokio
-- 
+
 ## Examples 
 
 ```rust
