@@ -13,11 +13,14 @@ use crate::db::internal::queries::alter_table_new_column;
 
 use super::aio_query::QueryBuilder;
 use super::aio_query::QueryRowResult;
+use super::aio_query::QueryRowsResult;
 use super::internal::helpers::get_schema_from_generic;
 use super::internal::queries::create_table;
 use super::internal::queries::get_current_db_schema;
+use super::internal::queries::get_many_values;
 use super::internal::queries::get_single_value;
 use super::internal::queries::insert_value;
+use super::internal::queries::update_value;
 use super::models::Schema;
 
 pub struct AioDatabase {
@@ -123,7 +126,20 @@ impl AioDatabase {
           let conn = r_connection.read().unwrap();
 
           if let Some(mut query_result) = QueryRowResult::<T>::new(query_string, &conn).await {
-               get_single_value::<T>(&mut query_result).await;
+               get_single_value::<T>(&mut query_result);
+               return query_result.value;
+          }
+          else {
+               return None;
+          }
+     }
+
+     pub async fn get_many_values<'a, T: Default + Struct + Clone>(&self, query_string: String) -> Option<Vec<T>> {
+          let r_connection = self.conn.clone();
+          let conn = r_connection.read().unwrap();
+
+          if let Some(mut query_result) = QueryRowsResult::<T>::new_many(query_string, &conn).await {
+               get_many_values::<T>(&mut query_result).await;
                return query_result.value;
           }
           else {
@@ -137,5 +153,12 @@ impl AioDatabase {
                query_options: Vec::default(),
                db: &self
           }
+     }
+
+     pub async fn update_value<'a, T: Default + Struct + Clone>(&self, value: T, where_query: String) {
+          let r_connection = self.conn.clone();
+          let conn = r_connection.read().unwrap();
+
+          update_value::<T>(&value, self.get_name(), &where_query, conn).await;
      }
 }

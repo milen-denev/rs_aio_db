@@ -1,9 +1,9 @@
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use bevy_reflect::Struct;
-use libsql::{Connection, Row};
+use libsql::{Connection, Row, Rows};
 
-use super::{aio_database::AioDatabase, internal::queries::generate_get_query};
+use super::{aio_database::AioDatabase, internal::queries::{generate_get_query, generate_where_query}};
 
 pub struct QueryBuilder<'a> {
      pub table_name: String,
@@ -66,6 +66,18 @@ impl QueryBuilder<'_> {
           let db = self.db;
           let query = generate_get_query::<T>(&self);
           return db.get_single_value::<T>(query).await;
+     }
+
+     pub async fn get_many_values<'a, T: Default + Struct + Clone>(self) -> Option<Vec<T>> {
+          let db = self.db;
+          let query = generate_get_query::<T>(&self);
+          return db.get_many_values::<T>(query).await;
+     }
+
+     pub async fn update_value<'a, T: Default + Struct + Clone>(self, value: T) {
+          let db = self.db;
+          let where_query = generate_where_query::<T>(&self);
+          db.update_value::<T>(value, where_query).await;
      }
 }
 
@@ -133,6 +145,33 @@ impl<T> QueryRowResult<T> {
           }
           else {
                return None;
+          }
+     }
+}
+
+#[derive(Clone)]
+pub struct QueryRowsResult<T> {
+     pub value: Option<Vec<T>>,
+     pub rows: Arc<RwLock<Rows>>
+}
+
+impl<T> QueryRowsResult<T> {
+     pub async fn new_many(
+          query: String, 
+          connection: &Connection) -> Option<QueryRowsResult<T>> { 
+          let rows = connection
+               .query(&query, ())
+               .await
+               .unwrap();
+          
+          if rows.column_count() > 0 {
+               return Some(QueryRowsResult::<T> {
+                    value: None,
+                    rows: Arc::new(RwLock::new(rows))
+               });
+          }
+          else {
+               return None
           }
      }
 }

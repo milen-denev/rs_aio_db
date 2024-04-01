@@ -1,9 +1,9 @@
-use std::sync::RwLockReadGuard;
+use std::sync::{Arc, RwLockReadGuard};
 
 use bevy_reflect::Struct;
 use libsql::Connection;
 use log::debug;
-use crate::db::{aio_query::{QueryBuilder, QueryRowResult}, internal::helpers::{get_values_from_generic, query_match_operators}, models::Schema};
+use crate::db::{aio_query::{QueryBuilder, QueryRowResult, QueryRowsResult}, internal::helpers::{get_values_from_generic, query_match_operators}, models::Schema};
 use super::{helpers::set_values_from_row_result, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
 
 pub async fn create_table(schema_vec: &Vec<Schema>, name: &str, connection: &Connection) {
@@ -89,7 +89,6 @@ pub async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &
      drop(connection);
 }
 
-//let query = format!("SELECT * FROM {table_name} WHERE test2 = 16");
 pub fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder: &'a QueryBuilder<'_>) -> String {    
      let options = &query_builder.query_options;
      let table_name = &query_builder.table_name;
@@ -116,7 +115,86 @@ pub fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder: &'a Q
      return query;
 }
 
-pub async fn get_single_value<'a, T:  Default + Struct + Clone>(query_result: &mut QueryRowResult<T>) {    
+pub fn generate_where_query<'a, T:  Default + Struct + Clone>(query_builder: &'a QueryBuilder<'_>) -> String {    
+     let options = &query_builder.query_options;
+     let mut query = format!("WHERE ");
+
+     let schema = query_builder.db.get_schema();
+
+     for option in options.iter().take(options.iter().len() - 1) {
+          let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
+          let next = option.next.as_ref().unwrap();
+          let operator = option.operator.as_ref().unwrap();
+          query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, false, Some(next));
+     }
+
+     let option = options.iter().last().unwrap();
+
+     let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
+     let next = option.next.as_ref().unwrap();
+     let operator = option.operator.as_ref().unwrap();
+     query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, true, Some(next));
+
+     debug!("Executing select query: {}", query);
+
+     return query;
+}
+
+pub async fn update_value<T:  Default + Struct + Clone>(value: &T, table_name: &str, where_query: &str, connection: RwLockReadGuard<'_, Connection>) {
+     let generic_values = get_values_from_generic::<T>(value);
+     let mut query = format!("UPDATE {} SET ", table_name);
+
+     for generic_value in generic_values.iter().take(generic_values.len() - 1) {
+          let name = generic_value.field_name.as_str();
+          let value = generic_value.field_value;
+          let set_query = format!("{} = {:?}", name, value).replace("\"", "'");
+          query.push_str(set_query.as_str());
+          query.push_str(", ");
+     }
+
+     let generic_value = generic_values.iter().last().unwrap();
+
+     let name = generic_value.field_name.as_str();
+     let value = generic_value.field_value;
+     let set_query = format!("{} = {:?}", name, value).replace("\"", "'");
+     query.push_str(set_query.as_str());
+     query.push(' ');
+
+     query.push_str(where_query);
+
+     debug!("Executing insert query: {}", query);
+
+     connection.execute(&query, ())
+          .await
+          .unwrap();
+
+     drop(connection);
+}
+
+pub fn get_single_value<'a, T:  Default + Struct + Clone>(query_result: &mut QueryRowResult<T>) {    
      let result = set_values_from_row_result::<T>(query_result);
      query_result.value = Some(result);
+}
+
+pub async fn get_many_values<'a, T:  Default + Struct + Clone>(query_result: &mut QueryRowsResult<T>) { 
+     let arc_rows = query_result.rows.clone();
+     let mut rows = arc_rows.write().unwrap();
+
+     let mut vec: Vec<T> = Vec::new();
+
+     while let Ok(row) = rows.next().await {
+          if let Some(content) = row {
+               let query_row_result:  QueryRowResult<T> = QueryRowResult {
+                    row: Arc::new(content),
+                    value: None
+               };
+               let result = set_values_from_row_result::<T>(&query_row_result);
+               vec.push(result);
+          }
+          else {
+               break;
+          }
+     }
+
+     query_result.value = Some(vec);
 }
