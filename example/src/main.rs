@@ -1,6 +1,6 @@
 use rs_aio_db::db::aio_query::{Next, Operator};
 use rs_aio_db::db::aio_database::AioDatabase;
-use rs_aio_db::Reflect;
+use rs_aio_db::bevy_reflect::Reflect;
 
 #[derive(Default, Clone, Debug, Reflect)]
 struct Person {
