@@ -11,7 +11,7 @@ use crate::db::internal::helpers::get_system_char_delimiter;
 use crate::db::internal::queries::alter_table_drop_column;
 use crate::db::internal::queries::alter_table_new_column;
 
-use super::aio_query::Query;
+use super::aio_query::QueryBuilder;
 use super::aio_query::QueryRowResult;
 use super::internal::helpers::get_schema_from_generic;
 use super::internal::queries::create_table;
@@ -118,16 +118,24 @@ impl AioDatabase {
           insert_value::<T>(&value, self.get_name(), conn).await;
      }
 
-     pub async fn get_single_value<'a, T: Default + Struct + Clone>(&self, query: Query) -> Option<T> {
+     pub async fn get_single_value<'a, T: Default + Struct + Clone>(&self, query_string: String) -> Option<T> {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
 
-          if let Some(mut query_result) = QueryRowResult::<T>::new(query.final_query_str, &conn).await {
+          if let Some(mut query_result) = QueryRowResult::<T>::new(query_string, &conn).await {
                get_single_value::<T>(&mut query_result).await;
                return query_result.value;
           }
           else {
                return None;
+          }
+     }
+
+     pub fn query(&self) -> QueryBuilder {
+          return QueryBuilder {
+               table_name: self.get_name().to_string(),
+               query_options: Vec::default(),
+               db: &self
           }
      }
 }

@@ -1,15 +1,106 @@
 use std::sync::Arc;
 
+use bevy_reflect::Struct;
 use libsql::{Connection, Row};
 
-//let query = format!("SELECT * FROM {table_name} WHERE test2 = 16");
+use super::{aio_database::AioDatabase, internal::queries::generate_get_query};
 
-pub struct QueryBuilder {
-     
+pub struct QueryBuilder<'a> {
+     pub table_name: String,
+     pub query_options: Vec<QueryOption<'a>>,
+     pub db: &'a AioDatabase
 }
 
-pub struct Query {
-     pub final_query_str: String
+pub struct QueryOption<'a> {
+     pub field_name: String,
+     pub operator: Option<Operator>,
+     pub next: Option<Next>,
+     query_builder: Option<&'a QueryBuilder<'a>>
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Operator {
+     ///equal
+     Eq(String),
+     ///Not equal
+     Ne(String),
+     ///Greater Than
+     Gt(String),
+     ///Less Than
+     Lt(String),
+     ///Greater or Equal
+     Ge(String),
+     ///Less or Equal
+     Le(String)
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Next {
+     And,
+     Or
+}
+
+impl QueryBuilder<'_> {
+     pub fn new<'a>(db: &'a AioDatabase) -> QueryBuilder<'a> {
+          return QueryBuilder {
+               table_name: db.get_name().to_string(),
+               query_options: Vec::default(),
+               db: db
+          }
+     }
+
+     pub fn field<'a>(&'a self, name: &str) -> QueryOption<'a> {
+          QueryOption {
+               field_name: name.into(), 
+               operator: None,
+               query_builder: Some(self),
+               next: Some(Next::And)
+          }
+     }
+
+     pub fn clear(&mut self) {
+          self.query_options.clear();
+     }
+
+     pub async fn get_single_value<'a, T: Default + Struct + Clone>(self) -> Option<T> {
+          let db = self.db;
+          let query = generate_get_query::<T>(&self);
+          return db.get_single_value::<T>(query).await;
+     }
+}
+
+impl QueryOption<'_> {
+     pub fn where_is<'a>(&'a self, operator: Operator, next: Option<Next>) -> QueryBuilder<'a> {
+          let mut query = QueryBuilder {
+               table_name: self.query_builder.unwrap().table_name.clone(),
+               query_options: self.query_builder.unwrap().query_options.iter().map(|x| QueryOption {
+                    field_name: x.field_name.clone(),
+                    operator: x.operator.clone(),
+                    query_builder: x.query_builder,
+                    next: x.next.clone()
+               }).collect(),
+               db: self.query_builder.unwrap().db
+          };
+
+          if let Some(next) = next  {
+               query.query_options.push(QueryOption {
+                    field_name: self.field_name.clone(),
+                    operator: Some(operator),
+                    query_builder: None,
+                    next: Some(next)
+               });
+          }
+          else {
+               query.query_options.push(QueryOption {
+                    field_name: self.field_name.clone(),
+                    operator: Some(operator),
+                    query_builder: None,
+                    next: Some(Next::And)
+               });
+          }
+          
+          return query;
+     }
 }
 
 #[derive(Clone)]
@@ -28,7 +119,7 @@ impl<T> QueryRowResult<T> {
                .unwrap()
                .next()
                .await;
-               
+
           if let Ok(row_option) = row_result {
                if let Some(row) = row_option {
                     return Some(QueryRowResult::<T> {

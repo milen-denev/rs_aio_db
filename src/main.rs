@@ -1,6 +1,6 @@
 use bevy_reflect::Reflect;
-use db::aio_query::Query;
-use crate::db::aio_database::AioDatabase;
+use db::aio_query::Next;
+use crate::db::{aio_database::AioDatabase, aio_query::Operator};
 
 pub mod db;
 
@@ -17,15 +17,11 @@ async fn main() {
     env_logger::init();
     let file_db = AioDatabase::create::<Test>("G:\\".into(), "Test".into()).await;
 
-    file_db.insert_value(Test {
-        name: "Test".into(),
-        test: 15,
-        test2: 16
-    }).await;
+    let result = file_db
+        .query()
+        .field("test")
+        .where_is(Operator::Lt(5.to_string()), None)
+        .get_single_value::<Test>().await;
 
-    let test = file_db.get_single_value::<Test>(Query { final_query_str: "".into() }).await;
-
-    println!("{:?}", test);
-
-    
+    println!("{:?}", result);
 }

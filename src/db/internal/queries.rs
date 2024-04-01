@@ -3,8 +3,8 @@ use std::sync::RwLockReadGuard;
 use bevy_reflect::Struct;
 use libsql::{Connection, Row};
 use log::debug;
-use crate::db::{aio_query::QueryRowResult, internal::helpers::get_values_from_generic, models::Schema};
-use super::{helpers::set_values_from_row_result, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
+use crate::db::{aio_query::{Operator, QueryBuilder, QueryRowResult}, internal::helpers::get_values_from_generic, models::Schema};
+use super::{helpers::{get_next, set_values_from_row_result}, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
 
 pub async fn create_table(schema_vec: &Vec<Schema>, name: &str, connection: &Connection) {
      let create_table_script = generate_db_schema_query(schema_vec, name);
@@ -87,6 +87,160 @@ pub async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &
           .unwrap();
 
      drop(connection);
+}
+
+//let query = format!("SELECT * FROM {table_name} WHERE test2 = 16");
+pub fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder: &'a QueryBuilder<'_>) -> String {    
+     let options = &query_builder.query_options;
+     let table_name = &query_builder.table_name;
+     let mut query = format!("SELECT * FROM {table_name} WHERE ");
+
+     let schema = query_builder.db.get_schema();
+
+     for option in options.iter().take(options.iter().len() - 1) {
+          let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
+          let next = option.next.as_ref().unwrap();
+
+          if let Operator::Eq(value) = option.operator.as_ref().unwrap() {
+               let end_value: String;
+               if current.field_type == "String" {
+                    end_value = format!("'{}'", value);
+               }
+               else {
+                   end_value = value.to_string();
+               }
+               let continuation = format!("{} == {} {} ", option.field_name, end_value, get_next(next));
+               query.push_str(continuation.as_str());
+          }
+          else if let Operator::Ne(value) = option.operator.as_ref().unwrap() {
+               let end_value: String;
+               if current.field_type == "String" {
+                    end_value = format!("'{}'", value);
+               }
+               else {
+                   end_value = value.to_string();
+               }
+               let continuation = format!("{} <> {} {} ", option.field_name, end_value, get_next(next));
+               query.push_str(continuation.as_str());
+          }
+          else if let Operator::Gt(value) = option.operator.as_ref().unwrap() {
+               let end_value: String;
+               if current.field_type == "String" {
+                    end_value = format!("'{}'", value);
+               }
+               else {
+                   end_value = value.to_string();
+               }
+               let continuation = format!("{} > {} {} ", option.field_name, end_value, get_next(next));
+               query.push_str(continuation.as_str());
+          }
+          else if let Operator::Lt(value) = option.operator.as_ref().unwrap() {
+               let end_value: String;
+               if current.field_type == "String" {
+                    end_value = format!("'{}'", value);
+               }
+               else {
+                   end_value = value.to_string();
+               }
+               let continuation = format!("{} < {} {} ", option.field_name, end_value, get_next(next));
+               query.push_str(continuation.as_str());
+          }
+          else if let Operator::Ge(value) = option.operator.as_ref().unwrap() {
+               let end_value: String;
+               if current.field_type == "String" {
+                    end_value = format!("'{}'", value);
+               }
+               else {
+                   end_value = value.to_string();
+               }
+               let continuation = format!("{} >= {} {} ", option.field_name, end_value, get_next(next));
+               query.push_str(continuation.as_str());
+          }
+          else if let Operator::Le(value) = option.operator.as_ref().unwrap() {
+               let end_value: String;
+               if current.field_type == "String" {
+                    end_value = format!("'{}'", value);
+               }
+               else {
+                   end_value = value.to_string();
+               }
+               let continuation = format!("{} <= {} {} ", option.field_name, end_value, get_next(next));
+               query.push_str(continuation.as_str());
+          }
+     }
+
+     let option = options.iter().last().unwrap();
+     let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
+     if let Operator::Eq(value) = option.operator.as_ref().unwrap() {
+          let end_value: String;
+          if current.field_type == "String" {
+               end_value = format!("'{}'", value);
+          }
+          else {
+              end_value = value.to_string();
+          }
+          let continuation = format!("{} == {}", option.field_name, end_value);
+          query.push_str(continuation.as_str());
+     }
+     else if let Operator::Ne(value) = option.operator.as_ref().unwrap() {
+          let end_value: String;
+          if current.field_type == "String" {
+               end_value = format!("'{}'", value);
+          }
+          else {
+              end_value = value.to_string();
+          }
+          let continuation = format!("{} <> {}", option.field_name, end_value);
+          query.push_str(continuation.as_str());
+     }
+     else if let Operator::Gt(value) = option.operator.as_ref().unwrap() {
+          let end_value: String;
+          if current.field_type == "String" {
+               end_value = format!("'{}'", value);
+          }
+          else {
+              end_value = value.to_string();
+          }
+          let continuation = format!("{} > {}", option.field_name, end_value);
+          query.push_str(continuation.as_str());
+     }
+     else if let Operator::Lt(value) = option.operator.as_ref().unwrap() {
+          let end_value: String;
+          if current.field_type == "String" {
+               end_value = format!("'{}'", value);
+          }
+          else {
+              end_value = value.to_string();
+          }
+          let continuation = format!("{} < {}", option.field_name, end_value);
+          query.push_str(continuation.as_str());
+     }
+     else if let Operator::Ge(value) = option.operator.as_ref().unwrap() {
+          let end_value: String;
+          if current.field_type == "String" {
+               end_value = format!("'{}'", value);
+          }
+          else {
+              end_value = value.to_string();
+          }
+          let continuation = format!("{} >= {}", option.field_name, end_value);
+          query.push_str(continuation.as_str());
+     }
+     else if let Operator::Le(value) = option.operator.as_ref().unwrap() {
+          let end_value: String;
+          if current.field_type == "String" {
+               end_value = format!("'{}'", value);
+          }
+          else {
+              end_value = value.to_string();
+          }
+          let continuation = format!("{} <= {}", option.field_name, end_value);
+          query.push_str(continuation.as_str());
+     }
+
+     debug!("Executing select query: {}", query);
+
+     return query;
 }
 
 pub async fn get_single_value<'a, T:  Default + Struct + Clone>(query_result: &mut QueryRowResult<T>) {    

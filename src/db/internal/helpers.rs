@@ -1,7 +1,7 @@
 use bevy_reflect::{GetField, ReflectMut, ReflectRef, Struct};
 use log::{debug, info};
 
-use crate::db::{aio_query::QueryRowResult, models::{GenericValue, Schema}};
+use crate::db::{aio_query::{Next, QueryRowResult}, models::{GenericValue, Schema}};
 
 pub fn get_system_char_delimiter() -> &'static str {
      let os = std::env::consts::OS;
@@ -129,4 +129,13 @@ pub fn set_values_from_row_result<'a, T:  Default + Struct + Clone>(row_result: 
      }
 
      return t_struct;
+}
+
+pub fn get_next(next: &Next) -> String {
+     if next == &Next::And {
+          return "AND".into();
+     }
+     else {
+          return "OR".into();
+     }
 }
