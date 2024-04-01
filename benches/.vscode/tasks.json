@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "buildCargo",
+            "type": "shell",
+            "command": "cargo build",
+            "args": [],
+            "presentation": {
+                "reveal": "always",
+            },
+        },
+        {
+            "label": "run",
+            "type": "shell",
+            "command": "pwsh ${workspaceRoot}/target/debug/${workspaceRootFolderName}",
+            "args": [],
+            "presentation": {
+                "reveal": "always",
+            },
+        }
+    ]
+}

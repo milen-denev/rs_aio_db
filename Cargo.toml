@@ -1,3 +1,6 @@
+[workplace]
+exclude = ["example/*", "benches/*"]
+
 [package]
 name = "rs_aio_db"
 version = "0.5.1"

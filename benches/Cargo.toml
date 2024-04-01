@@ -1,7 +1,7 @@
 [workspace]
 
 [package]
-name = "example"
+name = "benches"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,6 +9,7 @@ edition = "2021"
 
 [dependencies]
 rs_aio_db = "0.5.1"
-env_logger = "0.11.3"
 tokio = "1.37.0"
 bevy_reflect = "0.13.1"
+stopwatch = "0.0.7"
+env_logger = "*"
