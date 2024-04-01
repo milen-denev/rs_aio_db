@@ -1,4 +1,4 @@
-use rs_aio_db::db;
+use rs_aio_db::db::{self, aio_database::AioDatabase};
 
 #[derive(Reflect, Default, Clone, Debug)]
 struct Person {
