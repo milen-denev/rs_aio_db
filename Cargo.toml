@@ -1,6 +1,6 @@
 [package]
 name = "rs_aio_db"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 repository = "https://github.com/milen-denev/rs_aio_db"
 license = "Apache-2.0"

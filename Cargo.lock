@@ -1335,7 +1335,7 @@ dependencies = [
 
 [[package]]
 name = "rs_aio_db"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "bevy_reflect",
  "libsql",
