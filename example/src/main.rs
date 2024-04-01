@@ -19,7 +19,7 @@ async fn main() {
     let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
 
     //In-Memory database
-    let in_memory_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+    let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into()).await;
 
     file_db.insert_value(Person {
         name: "Mylo".into(),
