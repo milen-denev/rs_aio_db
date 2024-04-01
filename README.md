@@ -84,3 +84,6 @@ async fn main() {
     println!("Deleted rows: {:?}", delete_rows);
 }
 ```
+### Benchmarks
+![image]([files/Users/jzhang/Desktop/Isolated.png](https://github.com/milen-denev/rs_aio_db/blob/master/benches/images/benchmark_02042023.jpg))
+
