@@ -6,7 +6,7 @@
 - Auto migration: If additional or fewer fields are introduced to a structure, it immediately updates the required alterations to the database schema.
 - Local or In-Memory Capability: All functionality operates within local storage or in-memory systems.
 - Create records, retrieve one or many, update them or delete them with a dead simple ORM-like API.
-- Performance: To be determined (relies on bevy_reflect and libsql)
+- Performance: Offers very good performance, by doing some preliminary tests it seems that the overhead from both main libraries that I use (libsql and bevy_reflect) plus the overhead from my library is small enough to be unnoticeable, reading 1000 rows one by one took 28ms. 
 - Async Support with Tokio
 
 ## Examples 
