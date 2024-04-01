@@ -1,7 +1,7 @@
 use std::sync::RwLockReadGuard;
 
 use bevy_reflect::Struct;
-use libsql::{Connection, Row};
+use libsql::Connection;
 use log::debug;
 use crate::db::{aio_query::{Operator, QueryBuilder, QueryRowResult}, internal::helpers::get_values_from_generic, models::Schema};
 use super::{helpers::{get_next, set_values_from_row_result}, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
