@@ -1,7 +1,7 @@
 use bevy_reflect::{GetField, ReflectMut, ReflectRef, Struct};
 use log::{debug, info};
 
-use crate::db::{aio_query::{Next, QueryRowResult}, models::{GenericValue, Schema}};
+use crate::db::{aio_query::{Next, Operator, QueryRowResult}, models::{GenericValue, Schema}};
 
 pub fn get_system_char_delimiter() -> &'static str {
      let os = std::env::consts::OS;
@@ -137,5 +137,111 @@ pub fn get_next(next: &Next) -> String {
      }
      else {
           return "OR".into();
+     }
+}
+
+pub fn get_end_value(value: &str, field_type: &str) -> String{
+     let end_value: String;
+     if field_type == "String" {
+          end_value = format!("'{}'", value);
+     }
+     else {
+         end_value = value.to_string();
+     }
+
+     return end_value;
+}
+
+pub fn push_str_to_query_string(
+     query_string: &mut String, 
+     field_name: &str, 
+     end_value: &str, 
+     last_item: bool, 
+     sql_operator: &str, 
+     next: Option<&Next>) {
+     if !last_item {
+          let next = next.unwrap();
+          let continuation = format!("{} {} {} {} ", field_name, sql_operator, end_value, get_next(next));
+          query_string.push_str(continuation.as_str());
+     } else {
+          let continuation = format!("{} {} {}", field_name, sql_operator, end_value);
+          query_string.push_str(continuation.as_str());
+     }
+}
+
+pub fn query_match_operators(
+     operator: &Operator, 
+     query_string: &mut String, 
+     field_name: &str, 
+     field_type: &str, 
+     last_item: bool, 
+     next: Option<&Next>) {
+     match operator {
+          Operator::Eq(value) => {
+               let end_value = get_end_value(&value, field_type);
+               push_str_to_query_string(
+                    query_string, 
+                    field_name,
+                    &end_value,
+                    last_item, 
+                    "==",
+                    next
+               );
+          },
+          Operator::Ne(value) => {
+               let end_value = get_end_value(&value, field_type);
+               push_str_to_query_string(
+                    query_string, 
+                    field_name,
+                    &end_value,
+                    last_item, 
+                    "<>",
+                    next
+               );
+          },
+          Operator::Gt(value) => {
+               let end_value = get_end_value(&value, field_type);
+               push_str_to_query_string(
+                    query_string, 
+                    field_name,
+                    &end_value,
+                    last_item, 
+                    ">",
+                    next
+               );
+          },
+          Operator::Lt(value) => {
+               let end_value = get_end_value(&value, field_type);
+               push_str_to_query_string(
+                    query_string, 
+                    field_name,
+                    &end_value,
+                    last_item, 
+                    "<",
+                    next
+               );
+          },
+          Operator::Ge(value) => {
+               let end_value = get_end_value(&value, field_type);
+               push_str_to_query_string(
+                    query_string, 
+                    field_name,
+                    &end_value,
+                    last_item, 
+                    ">=",
+                    next
+               );
+          },
+          Operator::Le(value) => {
+               let end_value = get_end_value(&value, field_type);
+               push_str_to_query_string(
+                    query_string, 
+                    field_name,
+                    &end_value,
+                    last_item, 
+                    "<=",
+                    next
+               );
+          }
      }
 }
