@@ -1427,9 +1427,9 @@ dependencies = [
 
 [[package]]
 name = "rs_aio_db"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24266be5693eddc7dc454bcaac96dce09905cb269390df3b384d6e6ce67f4a97"
+checksum = "a00d3fdb2fbad199b7042dcf8f0068124c564ea894b964d8f3904a9dcf850e15"
 dependencies = [
  "bevy_reflect",
  "libsql",
