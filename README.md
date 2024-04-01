@@ -86,4 +86,5 @@ async fn main() {
 ```
 ### Benchmarks
 ![image](https://github.com/milen-denev/rs_aio_db/blob/master/benches/images/benchmark_02042023.jpg)
+##### Explanation
 All of this 4 benchmarks has been done synchronously. The point of synchronously executing 1000 times each test was to see how much overhead does my library add to libsql and bevy_reflect. As it seems from the 3rd test which executed 1000 times not much (**28ms**). For retrieving 1 row it took on average 0.0028ms or 28us which is fast. Let's not forget the latency of the SSD itself and the Sqlite engine which for sure adds more to the equation. When executed the first and second test scenario my SSD reached latency of 21.1ms and 90% usage for sure is the reason behind the 3+ seconds for 1000 row inserts and row updates. It's under investigation.
