@@ -522,6 +522,7 @@ dependencies = [
 name = "example"
 version = "0.1.0"
 dependencies = [
+ "bevy_reflect",
  "env_logger",
  "rs_aio_db",
  "tokio",
@@ -1427,9 +1428,9 @@ dependencies = [
 
 [[package]]
 name = "rs_aio_db"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01c48ba4a4520365df2d9664ba4285b4a847b55dac9e5121dcfebb7cd9cfd762"
+checksum = "17fbd5f253581322dbd3f68a306751c0b7848324f9f94081305c3686fa32d8d9"
 dependencies = [
  "bevy_reflect",
  "libsql",
