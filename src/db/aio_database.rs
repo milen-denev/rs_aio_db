@@ -16,6 +16,7 @@ use super::aio_query::QueryRowResult;
 use super::aio_query::QueryRowsResult;
 use super::internal::helpers::get_schema_from_generic;
 use super::internal::queries::create_table;
+use super::internal::queries::delete_value;
 use super::internal::queries::get_current_db_schema;
 use super::internal::queries::get_many_values;
 use super::internal::queries::get_single_value;
@@ -155,10 +156,17 @@ impl AioDatabase {
           }
      }
 
-     pub async fn update_value<'a, T: Default + Struct + Clone>(&self, value: T, where_query: String) {
+     pub async fn update_value<'a, T: Default + Struct + Clone>(&self, value: T, where_query: String) -> u64 {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
 
-          update_value::<T>(&value, self.get_name(), &where_query, conn).await;
+          return update_value::<T>(&value, self.get_name(), &where_query, conn).await;
+     }
+
+     pub async fn delete_value<'a, T: Default + Struct + Clone>(&self, where_query: String) -> u64 {
+          let r_connection = self.conn.clone();
+          let conn = r_connection.read().unwrap();
+
+          return delete_value::<T>(self.get_name(), &where_query, conn).await;
      }
 }

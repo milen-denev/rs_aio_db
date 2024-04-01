@@ -1,4 +1,4 @@
-use bevy_reflect::{GetField, ReflectMut, ReflectRef, Struct};
+use bevy_reflect::{DynamicStruct, GetField, Reflect, ReflectMut, ReflectRef, Struct};
 use log::{debug, info};
 
 use crate::db::{aio_query::{Next, Operator, QueryRowResult}, models::{GenericValue, Schema}};
@@ -79,7 +79,11 @@ pub fn set_values_from_row_result<'a, T:  Default + Struct + Clone>(row_result: 
 
           match field_type {
                "bool" => {
-                    *t_struct.get_field_mut::<bool>(field_name).unwrap() = row_result.row.get::<bool>(i as i32).unwrap();
+                    *t_struct.get_field_mut::<bool>(field_name).unwrap() = match row_result.row.get::<u32>(i as i32).unwrap() {
+                         0 => { false }
+                         1 => { true },
+                         _ => panic!("Wrong value for bool.")
+                    };
                },
                "u8" => {
                     *t_struct.get_field_mut::<u8>(field_name).unwrap() = row_result.row.get::<u32>(i as i32).unwrap() as u8;

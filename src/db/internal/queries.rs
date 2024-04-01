@@ -140,7 +140,11 @@ pub fn generate_where_query<'a, T:  Default + Struct + Clone>(query_builder: &'a
      return query;
 }
 
-pub async fn update_value<T:  Default + Struct + Clone>(value: &T, table_name: &str, where_query: &str, connection: RwLockReadGuard<'_, Connection>) {
+pub async fn update_value<T:  Default + Struct + Clone>(
+     value: &T, 
+     table_name: &str, 
+     where_query: &str, 
+     connection: RwLockReadGuard<'_, Connection>) -> u64 {
      let generic_values = get_values_from_generic::<T>(value);
      let mut query = format!("UPDATE {} SET ", table_name);
 
@@ -164,11 +168,31 @@ pub async fn update_value<T:  Default + Struct + Clone>(value: &T, table_name: &
 
      debug!("Executing insert query: {}", query);
 
-     connection.execute(&query, ())
+     let rows_affected = connection.execute(&query, ())
           .await
           .unwrap();
 
      drop(connection);
+
+     return rows_affected;
+}
+
+pub async fn delete_value<T:  Default + Struct + Clone>(
+     table_name: &str, 
+     where_query: &str, 
+     connection: RwLockReadGuard<'_, Connection>) -> u64 {
+     let mut query = format!("DELETE FROM {} ", table_name);
+     query.push_str(where_query);
+
+     debug!("Executing insert query: {}", query);
+
+     let rows_affected = connection.execute(&query, ())
+          .await
+          .unwrap();
+
+     drop(connection);
+
+     return rows_affected;
 }
 
 pub fn get_single_value<'a, T:  Default + Struct + Clone>(query_result: &mut QueryRowResult<T>) {    

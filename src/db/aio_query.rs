@@ -74,10 +74,16 @@ impl QueryBuilder<'_> {
           return db.get_many_values::<T>(query).await;
      }
 
-     pub async fn update_value<'a, T: Default + Struct + Clone>(self, value: T) {
+     pub async fn update_value<'a, T: Default + Struct + Clone>(self, value: T)  -> u64 {
           let db = self.db;
           let where_query = generate_where_query::<T>(&self);
-          db.update_value::<T>(value, where_query).await;
+          return db.update_value::<T>(value, where_query).await;
+     }
+
+     pub async fn delete_value<'a, T: Default + Struct + Clone>(self) -> u64 {
+          let db = self.db;
+          let where_query = generate_where_query::<T>(&self);
+          return db.delete_value::<T>(where_query).await;
      }
 }
 
