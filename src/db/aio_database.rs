@@ -24,6 +24,72 @@ use super::internal::queries::insert_value;
 use super::internal::queries::update_value;
 use super::models::Schema;
 
+/// # All in one aka Aio Database
+/// ### Locally preserved database example
+/// ```rust
+/// //This will create a Test.db file at G:\ location
+/// let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+/// ```
+/// ### In-memory database example
+/// ```rust
+/// let in_memory_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+/// ```
+/// #### Create a model
+/// ```rust
+/// use rs_aio_db::Reflect;
+/// 
+/// #[derive(Default, Clone, Debug, Reflect)]
+/// struct Person {
+///     name: String,
+///     age: i32,
+///     height: i32,
+///     married: bool,
+/// }
+/// ```
+/// 
+/// #### For Inserting values:
+/// ```rust
+/// file_db.insert_value(Person {
+///    name: "Mylo".into(),
+///    age: 0,
+///    height: 0,
+///    married: true
+/// }).await;
+/// ```
+/// 
+/// #### For getting existing values / records:
+/// ```rust
+/// let get_record = file_db
+///    .query()
+///    .field("age")
+///    .where_is(Operator::Gt(5.to_string()), Some(Next::Or))
+///    .field("name")
+///    .where_is(Operator::Eq("Mylo".into()), None)
+///    .get_many_values::<Person>().await;
+/// ```
+/// 
+/// #### Update existing values / records:
+/// ```rust
+/// let update_rows = file_db
+///    .query()
+///    .field("age")
+///    .where_is(Operator::Eq((0).to_string()), Some(Next::Or))
+///    .update_value(Person {
+///        name: "Mylo".into(),
+///        age: 5,
+///        height: 5,
+///        married: false
+///    }).await;
+/// ```
+/// 
+/// #### Deleting existing values / records:
+/// ```rust
+/// let delete_rows = file_db
+///    .query()
+///    .field("name")
+///    .where_is(Operator::Eq("Mylo".into()), None)
+///    .delete_value::<Person>().await;
+/// ```
 pub struct AioDatabase {
      name: String,
      conn: Arc<RwLock<Connection>>,
@@ -31,6 +97,8 @@ pub struct AioDatabase {
 }
 
 impl AioDatabase {
+
+     ///Create a locally persisted database.
      pub async fn create<'a, T:  Default + Struct + Clone>(location: String, name: String) -> AioDatabase {
           let db_location = format!("{}{}{}{}", location, get_system_char_delimiter(), name, ".db");
           let builder = Builder::new_local(db_location).build().await.unwrap();
@@ -70,6 +138,7 @@ impl AioDatabase {
           }
      }
 
+     ///Create an in-memory database.
      pub async fn create_in_memory<'a, T:  Default + Struct + Clone>(name: String) -> AioDatabase {
           let builder = Builder::new_local(":memory:").build().await.unwrap();
           let connection = builder.connect().unwrap();
@@ -108,21 +177,33 @@ impl AioDatabase {
           }
      }
 
+     /// Get the name of the database and table's name as well.
      pub fn get_name(&self) -> &str {
           return self.name.as_str();
      }
 
+     /// Get the schema of the struct / database.
      pub fn get_schema(&self) -> &Vec<Schema> {
           return &self.schema;
      }
 
+     /// Inserts a **T** value in the database. 
      pub async fn insert_value<'a, T:  Default + Struct + Clone>(&self, value: T) {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
           insert_value::<T>(&value, self.get_name(), conn).await;
      }
 
-     pub async fn get_single_value<'a, T: Default + Struct + Clone>(&self, query_string: String) -> Option<T> {
+     /// Creates a QueryBuilder that allows to chain query filters for different field / columns.
+     pub fn query(&self) -> QueryBuilder {
+          return QueryBuilder {
+               table_name: self.get_name().to_string(),
+               query_options: Vec::default(),
+               db: &self
+          }
+     }
+     
+     pub(crate) async fn get_single_value<'a, T: Default + Struct + Clone>(&self, query_string: String) -> Option<T> {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
 
@@ -135,7 +216,7 @@ impl AioDatabase {
           }
      }
 
-     pub async fn get_many_values<'a, T: Default + Struct + Clone>(&self, query_string: String) -> Option<Vec<T>> {
+     pub(crate) async fn get_many_values<'a, T: Default + Struct + Clone>(&self, query_string: String) -> Option<Vec<T>> {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
 
@@ -148,22 +229,14 @@ impl AioDatabase {
           }
      }
 
-     pub fn query(&self) -> QueryBuilder {
-          return QueryBuilder {
-               table_name: self.get_name().to_string(),
-               query_options: Vec::default(),
-               db: &self
-          }
-     }
-
-     pub async fn update_value<'a, T: Default + Struct + Clone>(&self, value: T, where_query: String) -> u64 {
+     pub(crate) async fn update_value<'a, T: Default + Struct + Clone>(&self, value: T, where_query: String) -> u64 {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
 
           return update_value::<T>(&value, self.get_name(), &where_query, conn).await;
      }
 
-     pub async fn delete_value<'a, T: Default + Struct + Clone>(&self, where_query: String) -> u64 {
+     pub(crate) async fn delete_value<'a, T: Default + Struct + Clone>(&self, where_query: String) -> u64 {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
 

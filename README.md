@@ -14,7 +14,7 @@
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.4.0"
+rs_aio_db = "0.5.1"
 env_logger = "0.11.3"
 tokio = "1.37.0"
 bevy_reflect = "0.13.1"
@@ -22,7 +22,7 @@ bevy_reflect = "0.13.1"
 
 ### main.rs
 ```rust
-use rs_aio_db::db::aio_query::{Next, Operator};
+use rs_aio_db::db::aio_query::{Next, Operator, QueryBuilder};
 use rs_aio_db::db::aio_database::AioDatabase;
 use rs_aio_db::Reflect;
 
@@ -36,7 +36,14 @@ struct Person {
 
 #[tokio::main]
 async fn main() {
+    std::env::set_var("RUST_LOG", "debug");
+    env_logger::init();
+
+    //Locally persisted database
     let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+
+    //In-Memory database
+    let in_memory_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
 
     file_db.insert_value(Person {
         name: "Mylo".into(),
