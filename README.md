@@ -11,7 +11,7 @@
 
 ## Production Readiness 
 
-Use this in production at your own risk. Currently I consider this to be Alpha almost Best stage. There are known bugs, check the pinned Issue's tab. Although there are no observable major issues until v0.6 I don't recommend it for use in critical systems.
+Use this in production at your own risk. Currently I consider this to be Alpha almost Beta stage. There are known bugs, check the pinned Issue's tab. Although there are no observable major issues until v0.6 I don't recommend it for use in critical systems.
 
 ## Planned Features
 
