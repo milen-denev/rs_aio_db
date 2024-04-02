@@ -16,7 +16,7 @@ Use this in production at your own risk. Currently I consider this to be Alpha a
 ## Planned Features
 
 - Use of Moka cache for bypassing the local storage and increase performance.
-- Additional Queries options / APIs like BETWEEN for numbers and CONTAINS or % (starts with) for strings.
+- Additional Query options.
 - Additional options for AioDatabase instances apart from the in-memory and local storage drive.
 
 ## Examples
@@ -24,7 +24,7 @@ Use this in production at your own risk. Currently I consider this to be Alpha a
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.5.2"
+rs_aio_db = "0.5.3"
 env_logger = "0.11.3"
 tokio = "1.37.0"
 bevy_reflect = "0.13.1"
@@ -62,7 +62,19 @@ async fn main() {
         married: true
     }).await;
 
-    let get_record = file_db
+    let get_single_record = file_db
+        .query()
+        .field("age")
+        .where_is(Operator::Gt(5.to_string()), Some(Next::Or))
+        .field("name")
+        .where_is(Operator::Eq("Mylo".into()), None)
+        .get_single_value::<Person>()
+        .await
+        .unwrap_or_default();
+
+    println!("Record result: {:?}", get_single_record);
+
+    let get_records = file_db
         .query()
         .field("age")
         .where_is(Operator::Gt(5.to_string()), Some(Next::Or))
@@ -70,7 +82,7 @@ async fn main() {
         .where_is(Operator::Eq("Mylo".into()), None)
         .get_many_values::<Person>().await;
 
-    println!("Record result: {:?}", get_record);
+    println!("Record results: {:?}", get_records);
 
     let update_rows = file_db
         .query()
@@ -99,9 +111,39 @@ async fn main() {
         .where_is(Operator::Eq("Mylo".into()), None)
         .delete_value::<Person>().await;
 
-    println!("Deleted rows: {:?}", delete_rows);
+    let contains = file_db
+        .query()
+        .field("name")
+        .where_is(Operator::Contains("Mylo".into()), None)
+        .get_single_value::<Person>()
+        .await
+        .unwrap_or_default();
+
+    println!("Contains: {:?}", contains);
+
+    let starts_with = file_db
+        .query()
+        .field("name")
+        .where_is(Operator::StartsWith("Mylo".into()), None)
+        .get_single_value::<Person>()
+        .await
+        .unwrap_or_default();
+
+    println!("Starts with: {:?}", starts_with);
+
+    
+    let starts_with = file_db
+        .query()
+        .field("name")
+        .where_is(Operator::EndsWith("Mylo".into()), None)
+        .get_single_value::<Person>()
+        .await
+        .unwrap_or_default();
+
+    println!("Ends with: {:?}", starts_with);
 }
 ```
+
 ### Benchmarks
 ![image](https://github.com/milen-denev/rs_aio_db/blob/master/benches/images/benchmark_02042023.jpg)
 ##### Explanation

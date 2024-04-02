@@ -46,7 +46,10 @@ pub enum Operator {
      Gt(String),
      Lt(String),
      Ge(String),
-     Le(String)
+     Le(String),
+     Contains(String),
+     StartsWith(String),
+     EndsWith(String)
 }
 
 /// Use this for declaring what the next query filter will be if any (**AND** or **OR**).

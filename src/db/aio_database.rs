@@ -104,7 +104,7 @@ impl AioDatabase {
           let db_location = format!("{}{}{}{}", location, get_system_char_delimiter(), name, ".db");
           let builder = Builder::new_local(db_location).build().await.unwrap();
           let connection = builder.connect().unwrap();
-          
+
           let generic_schema = get_schema_from_generic::<T>();
           let current_schema_option = get_current_db_schema(&name, &connection).await;
 
@@ -189,7 +189,7 @@ impl AioDatabase {
      }
 
      /// Inserts a **T** value in the database. 
-     pub async fn insert_value<'a, T:  Default + Struct + Clone>(&self, value: T) {
+     pub async fn insert_value<'a, T:  Default + Struct + Clone>(&self, value: &T) {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
           insert_value::<T>(&value, self.get_name(), conn).await;
@@ -207,7 +207,7 @@ impl AioDatabase {
      pub(crate) async fn get_single_value<'a, T: Default + Struct + Clone>(&self, query_string: String) -> Option<T> {
           let r_connection = self.conn.clone();
           let conn = r_connection.read().unwrap();
-
+          
           if let Some(mut query_result) = QueryRowResult::<T>::new(query_string, &conn).await {
                get_single_value::<T>(&mut query_result);
                return query_result.value;

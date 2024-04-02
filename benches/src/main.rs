@@ -1,6 +1,6 @@
-use std::fs::{self, File};
+use std::fs;
 
-use rs_aio_db::db::aio_query::{Next, Operator, QueryBuilder};
+use rs_aio_db::db::aio_query::Operator;
 use rs_aio_db::db::aio_database::AioDatabase;
 use rs_aio_db::Reflect;
 
@@ -29,7 +29,9 @@ async fn main() {
 
     let mut sw = stopwatch::Stopwatch::start_new();
 
-    for i in 0..1000 {
+    const TOTAL_ITERATIONS: u32 = 10;
+
+    for i in 0..TOTAL_ITERATIONS {
         let person = Person {
             id: i,
             first_name: "Mylo".into(),
@@ -45,11 +47,11 @@ async fn main() {
         file_db.insert_value(person).await;
     }
 
-    println!("Time elapsed for inserting 1000 persons: {}ms", sw.elapsed_ms());
+    println!("Time elapsed for inserting {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
 
     sw.restart();
 
-    for i in 0..1000 {
+    for i in 0..TOTAL_ITERATIONS {
         let person = Person {
             id: i,
             first_name: "Mylo 2".into(),
@@ -70,11 +72,11 @@ async fn main() {
             .await;
     }
 
-    println!("Time elapsed for updating 1000 persons: {}ms", sw.elapsed_ms());
+    println!("Time elapsed for updating {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
 
     sw.restart();
 
-    for i in 0..1000 {
+    for i in 0..TOTAL_ITERATIONS {
         let person = file_db
             .query()
             .field("id")
@@ -82,9 +84,12 @@ async fn main() {
             .get_single_value::<Person>()
             .await
             .unwrap_or_default();
+
+        let test = person.address;
+        drop(test);
     }
 
-    println!("Time elapsed for retrieving one by one 1000 persons: {}ms", sw.elapsed_ms());
+    println!("Time elapsed for retrieving one by one {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
 
     sw.restart();
 
@@ -96,5 +101,10 @@ async fn main() {
         .await
         .unwrap();
 
-    println!("Time elapsed for retrieving at once 1000 persons: {}ms", sw.elapsed_ms());
+    let length = persons.len();
+    drop(length);
+
+    println!("{:?}", persons);
+
+    println!("Time elapsed for retrieving at once {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
 }

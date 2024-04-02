@@ -173,6 +173,60 @@ pub(crate) fn push_str_to_query_string(
      }
 }
 
+pub(crate) fn push_contains_to_query_string(
+     query_string: &mut String, 
+     field_name: &str, 
+     end_value: &str, 
+     last_item: bool, 
+     next: Option<&Next>) {
+     let like_end_value = format!("'%{}%'", end_value.replace("'", ""));
+
+     if !last_item {
+          let next = next.unwrap();
+          let continuation = format!("{} LIKE {} {} ", field_name, like_end_value, get_next(next));
+          query_string.push_str(continuation.as_str());
+     } else {
+          let continuation = format!("{} LIKE {}", field_name, like_end_value);
+          query_string.push_str(continuation.as_str());
+     }
+}
+
+pub(crate) fn push_starts_with_to_query_string(
+     query_string: &mut String, 
+     field_name: &str, 
+     end_value: &str, 
+     last_item: bool, 
+     next: Option<&Next>) {
+     let like_end_value = format!("'{}%'", end_value.replace("'", ""));
+
+     if !last_item {
+          let next = next.unwrap();
+          let continuation = format!("{} LIKE {} {} ", field_name, like_end_value, get_next(next));
+          query_string.push_str(continuation.as_str());
+     } else {
+          let continuation = format!("{} LIKE {}", field_name, like_end_value);
+          query_string.push_str(continuation.as_str());
+     }
+}
+
+pub(crate) fn push_ends_with_to_query_string(
+     query_string: &mut String, 
+     field_name: &str, 
+     end_value: &str, 
+     last_item: bool, 
+     next: Option<&Next>) {
+     let like_end_value = format!("'%{}'", end_value.replace("'", ""));
+
+     if !last_item {
+          let next = next.unwrap();
+          let continuation = format!("{} LIKE {} {} ", field_name, like_end_value, get_next(next));
+          query_string.push_str(continuation.as_str());
+     } else {
+          let continuation = format!("{} LIKE {}", field_name, like_end_value);
+          query_string.push_str(continuation.as_str());
+     }
+}
+
 pub(crate) fn query_match_operators(
      operator: &Operator, 
      query_string: &mut String, 
@@ -244,6 +298,36 @@ pub(crate) fn query_match_operators(
                     &end_value,
                     last_item, 
                     "<=",
+                    next
+               );
+          },
+          Operator::Contains(value) => {
+               let end_value = get_end_value(&value, field_type);
+               push_contains_to_query_string(
+                    query_string, 
+                    field_name,
+                    &end_value,
+                    last_item,
+                    next
+               );
+          },
+          Operator::StartsWith(value) => {
+               let end_value = get_end_value(&value, field_type);
+               push_starts_with_to_query_string(
+                    query_string, 
+                    field_name,
+                    &end_value,
+                    last_item,
+                    next
+               );
+          },
+          Operator::EndsWith(value) => {
+               let end_value = get_end_value(&value, field_type);
+               push_ends_with_to_query_string(
+                    query_string, 
+                    field_name,
+                    &end_value,
+                    last_item,
                     next
                );
           }
