@@ -9,6 +9,16 @@
 - Performance: Offers very good performance, by doing some preliminary tests it seems that the overhead from both main libraries that I use (libsql and bevy_reflect) plus the overhead from my library is small enough to be unnoticeable, reading 1000 rows one by one took 28ms. 
 - Async Support with Tokio
 
+## Production Readiness 
+
+Use this in production at your own risk. Currently I consider this to be Alpha almost Best stage. There are known bugs, check the pinned Issue's tab. Although there are no observable major issues until v0.6 I don't recommend it for use in critical systems.
+
+## Planned Features
+
+- Use of Moka cache for bypassing the local storage and increase performance.
+- Additional Queries options / APIs like BETWEEN for numbers and CONTAINS or % (starts with) for strings.
+- Additional options for AioDatabase instances apart from the in-memory and local storage drive.
+
 ## Examples 
 
 ### cargo.toml
