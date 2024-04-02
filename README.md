@@ -19,7 +19,7 @@ Use this in production at your own risk. Currently I consider this to be Alpha a
 - Additional Queries options / APIs like BETWEEN for numbers and CONTAINS or % (starts with) for strings.
 - Additional options for AioDatabase instances apart from the in-memory and local storage drive.
 
-## Examples 
+## Examples
 
 ### cargo.toml
 ```TOML
