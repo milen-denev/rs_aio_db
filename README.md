@@ -75,6 +75,14 @@ async fn main() {
 
     println!("Updated rows: {:?}", update_rows);
 
+    let partial_update_rows = file_db
+        .query()
+        .field("age")
+        .where_is(Operator::Eq((0).to_string()), Some(Next::Or))
+        .partial_update::<Person>("height".into(), "50".into()).await;
+
+    println!("Updated rows: {:?}", partial_update_rows);
+
     let delete_rows = file_db
         .query()
         .field("name")

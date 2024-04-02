@@ -19,7 +19,7 @@ async fn main() {
     let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
 
     //In-Memory database
-    let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into()).await;
+    //let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into()).await;
 
     file_db.insert_value(Person {
         name: "Mylo".into(),
@@ -44,12 +44,20 @@ async fn main() {
         .where_is(Operator::Eq((0).to_string()), Some(Next::Or))
         .update_value(Person {
             name: "Mylo".into(),
-            age: 5,
+            age: 0,
             height: 5,
             married: false
         }).await;
 
     println!("Updated rows: {:?}", update_rows);
+
+    let partial_update_rows = file_db
+        .query()
+        .field("age")
+        .where_is(Operator::Eq((0).to_string()), Some(Next::Or))
+        .partial_update::<Person>("height".into(), "50".into()).await;
+
+    println!("Updated rows: {:?}", partial_update_rows);
 
     let delete_rows = file_db
         .query()
