@@ -177,6 +177,34 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone>(
      return rows_affected;
 }
 
+pub(crate) async fn partial_update<T:  Default + Struct + Clone>(
+     field_name: String,
+     field_value: String,
+     table_name: &str, 
+     where_query: &str, 
+     connection: RwLockReadGuard<'_, Connection>) -> u64 {
+     
+     let mut query = format!("UPDATE {} SET ", table_name);
+
+     let name = field_name;
+     let value = field_value;
+     let set_query = format!("{} = {}", name, value).replace("\"", "'");
+     query.push_str(set_query.as_str());
+     query.push(' ');
+
+     query.push_str(where_query);
+
+     debug!("Executing insert query: {}", query);
+
+     let rows_affected = connection.execute(&query, ())
+          .await
+          .unwrap();
+
+     drop(connection);
+
+     return rows_affected;
+}
+
 pub(crate) async fn delete_value<T:  Default + Struct + Clone>(
      table_name: &str, 
      where_query: &str, 

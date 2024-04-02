@@ -21,6 +21,7 @@ use super::internal::queries::get_current_db_schema;
 use super::internal::queries::get_many_values;
 use super::internal::queries::get_single_value;
 use super::internal::queries::insert_value;
+use super::internal::queries::partial_update;
 use super::internal::queries::update_value;
 use super::models::Schema;
 
@@ -32,7 +33,7 @@ use super::models::Schema;
 /// ```
 /// ### In-memory database example
 /// ```rust
-/// let in_memory_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+/// let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into()).await;
 /// ```
 /// #### Create a model
 /// ```rust
@@ -234,6 +235,13 @@ impl AioDatabase {
           let conn = r_connection.read().unwrap();
 
           return update_value::<T>(&value, self.get_name(), &where_query, conn).await;
+     }
+
+     pub(crate) async fn partial_update<'a, T: Default + Struct + Clone>(&self, field_name: String, field_value: String, where_query: String) -> u64 {
+          let r_connection = self.conn.clone();
+          let conn = r_connection.read().unwrap();
+
+          return partial_update::<T>(field_name, field_value, self.get_name(), &where_query, conn).await;
      }
 
      pub(crate) async fn delete_value<'a, T: Default + Struct + Clone>(&self, where_query: String) -> u64 {
