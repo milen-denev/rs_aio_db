@@ -1,9 +1,10 @@
-use std::sync::{Arc, RwLockReadGuard};
+use std::sync::Arc;
 
 use bevy_reflect::Struct;
 use libsql::Connection;
 use log::debug;
-use crate::db::{aio_query::{QueryBuilder, QueryRowResult, QueryRowsResult}, internal::helpers::{get_values_from_generic, query_match_operators}, models::Schema};
+use r2d2::PooledConnection;
+use crate::db::{aio_database::AioDatabaseConnection, aio_query::{QueryBuilder, QueryRowResult, QueryRowsResult}, internal::helpers::{get_values_from_generic, query_match_operators}, models::Schema};
 use super::{helpers::set_values_from_row_result, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
 
 pub(crate) async fn create_table(schema_vec: &Vec<Schema>, name: &str, connection: &Connection) {
@@ -12,6 +13,17 @@ pub(crate) async fn create_table(schema_vec: &Vec<Schema>, name: &str, connectio
      connection.execute(&create_table_script, ())
           .await
           .unwrap();
+}
+
+pub(crate) async fn change_db_settings(connection: &Connection) {
+     _ = connection.execute("PRAGMA journal_mode=WAL;", ())
+          .await;
+
+     _ = connection.execute("PRAGMA journal_size_limit=-1;", ())
+          .await;
+
+     _ = connection.execute("PRAGMA auto_vacuum=2;", ())
+          .await;
 }
 
 pub(crate) async fn get_current_db_schema(name: &str, connection: &Connection) -> Option<Vec<Schema>> {   
@@ -57,7 +69,7 @@ pub(crate) async fn alter_table_drop_column(name: &str, column_name: &str, conne
           .unwrap();
 }
 
-pub(crate) async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &str, connection: RwLockReadGuard<'_, Connection>) {
+pub(crate) async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &str, connection: PooledConnection<AioDatabaseConnection>) {
      let generic_values = get_values_from_generic::<T>(value);
      let mut query = format!("INSERT INTO {} (", table_name);
 
@@ -144,7 +156,7 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone>(
      value: &T, 
      table_name: &str, 
      where_query: &str, 
-     connection: RwLockReadGuard<'_, Connection>) -> u64 {
+     connection: PooledConnection<AioDatabaseConnection>) -> u64 {
      let generic_values = get_values_from_generic::<T>(value);
      let mut query = format!("UPDATE {} SET ", table_name);
 
@@ -182,7 +194,7 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone>(
      field_value: String,
      table_name: &str, 
      where_query: &str, 
-     connection: RwLockReadGuard<'_, Connection>) -> u64 {
+     connection: PooledConnection<AioDatabaseConnection>) -> u64 {
      
      let mut query = format!("UPDATE {} SET ", table_name);
 
@@ -208,7 +220,7 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone>(
 pub(crate) async fn delete_value<T:  Default + Struct + Clone>(
      table_name: &str, 
      where_query: &str, 
-     connection: RwLockReadGuard<'_, Connection>) -> u64 {
+     connection: PooledConnection<AioDatabaseConnection>) -> u64 {
      let mut query = format!("DELETE FROM {} ", table_name);
      query.push_str(where_query);
 

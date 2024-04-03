@@ -20,9 +20,12 @@ struct Person {
 fn create_db() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\Test.db");
-          _ = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
-          assert_eq!(fs::File::open("G:\\Test.db").is_ok(), true);
+          _ = fs::remove_file("G:\\create_db.db");
+
+          _ = AioDatabase::create::<Person>("G:\\".into(), "create_db".into(), 15).await;
+          let result = fs::File::open("G:\\create_db.db");
+
+          assert_eq!(result.is_ok(), true);
     });
 }
 
@@ -30,9 +33,9 @@ fn create_db() {
 fn insert_value() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\Test.db");
+          _ = fs::remove_file("G:\\insert_value.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+          let file_db = AioDatabase::create::<Person>("G:\\".into(), "insert_value".into(), 15).await;
 
           let person = Person {
                id: 0,
@@ -48,7 +51,9 @@ fn insert_value() {
 
           file_db.insert_value(&person).await;
 
-          assert_eq!(fs::File::open("G:\\Test.db").is_ok(), true);
+          let result = fs::File::open("G:\\insert_value.db");
+
+          assert_eq!(result.is_ok(), true);
     });
 }
 
@@ -56,9 +61,9 @@ fn insert_value() {
 fn update_value() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\Test.db");
+          _ = fs::remove_file("G:\\update_value.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+          let file_db = AioDatabase::create::<Person>("G:\\".into(), "update_value".into(), 15).await;
 
           let person = Person {
                id: 0,
@@ -89,9 +94,9 @@ fn update_value() {
 fn retrieve_single_value() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\Test.db");
+          _ = fs::remove_file("G:\\retrieve_single_value.db");
+          let file_db = AioDatabase::create::<Person>("G:\\".into(), "retrieve_single_value".into(), 15).await;
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
 
           let person = Person {
                id: 0,
@@ -128,9 +133,9 @@ fn retrieve_single_value() {
 fn retrieve_all_values() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\Test.db");
+          _ = fs::remove_file("G:\\retrieve_all_values.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+          let file_db = AioDatabase::create::<Person>("G:\\".into(), "retrieve_all_values".into(), 15).await;
 
           let person = Person {
                id: 0,
@@ -187,9 +192,9 @@ fn retrieve_all_values() {
 fn delete_all_values() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\Test.db");
+          _ = fs::remove_file("G:\\delete_all_values.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+          let file_db = AioDatabase::create::<Person>("G:\\".into(), "delete_all_values".into(), 15).await;
 
           let person = Person {
                id: 0,
@@ -227,7 +232,7 @@ fn delete_all_values() {
                .delete_value::<Person>()
                .await;
 
-          assert_eq!(deleted_persons, 4);
+          assert_eq!(deleted_persons, 4);  
     });
 }
 
@@ -235,9 +240,9 @@ fn delete_all_values() {
 fn contains_values() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\Test.db");
+          _ = fs::remove_file("G:\\contains_values.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+          let file_db = AioDatabase::create::<Person>("G:\\".into(), "contains_values".into(), 15).await;
 
           let person = Person {
                id: 0,
@@ -295,9 +300,9 @@ fn contains_values() {
 fn starts_with_values() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\Test.db");
+          _ = fs::remove_file("G:\\starts_with_values.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+          let file_db = AioDatabase::create::<Person>("G:\\".into(), "starts_with_values".into(), 15).await;
 
           let person = Person {
                id: 0,
@@ -355,9 +360,9 @@ fn starts_with_values() {
 fn ends_with_values() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\Test.db");
+          _ = fs::remove_file("G:\\ends_with_values.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+          let file_db = AioDatabase::create::<Person>("G:\\".into(), "ends_with_values".into(), 15).await;
 
           let person = Person {
                id: 0,

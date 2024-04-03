@@ -3,7 +3,7 @@ exclude = ["example/*", "benches/*"]
 
 [package]
 name = "rs_aio_db"
-version = "0.5.3"
+version = "0.5.4"
 edition = "2021"
 repository = "https://github.com/milen-denev/rs_aio_db"
 license = "Apache-2.0"
@@ -20,3 +20,4 @@ tokio = "1.37.0"
 log = "0.4.21"
 env_logger = "0.11.3"
 stopwatch = "0.0.7"
+r2d2 = "0.8.10"

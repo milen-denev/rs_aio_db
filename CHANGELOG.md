@@ -1,5 +1,9 @@
 # Aio Database Release Notes
 
+### v5.4
+- Internal: Added connection pooling
+- Internal: Changed journal_mode to WAL
+
 ### v5.3
 - **insert_value** is now accepting references
 - Add **Contains**, **StartsWith** and **EndsWith** Operators

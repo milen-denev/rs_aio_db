@@ -1,14 +1,10 @@
-use rs_aio_db::db::aio_query::{Next, Operator, QueryBuilder};
+use rs_aio_db::db::aio_query::{Next, Operator};
 use rs_aio_db::db::aio_database::AioDatabase;
-use rs_aio_db::Reflect;
+mod model;
+use actix_web::{get, App, Responder, HttpServer};
 
-#[derive(Default, Clone, Debug, Reflect)]
-struct Person {
-    name: String,
-    age: i32,
-    height: i32,
-    married: bool,
-}
+//DON'T PLACE WITHIN THE SAME DIRECTORY MODELS AND ACTIX ENDPOINTS
+use crate::model::Person;
 
 #[tokio::main]
 async fn main() {
@@ -66,4 +62,17 @@ async fn main() {
         .delete_value::<Person>().await;
 
     println!("Deleted rows: {:?}", delete_rows);
+
+    _ = HttpServer::new(|| {
+        App::new().service(index)
+    })
+    .bind(("127.0.0.1", 80))
+    .unwrap()
+    .run()
+    .await;
+}
+
+#[get("/")]
+async fn index() -> impl Responder {
+   format!("Db Called out!")
 }

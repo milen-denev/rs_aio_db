@@ -2,20 +2,9 @@ use std::fs;
 
 use rs_aio_db::db::aio_query::Operator;
 use rs_aio_db::db::aio_database::AioDatabase;
-use rs_aio_db::Reflect;
 
-#[derive(Default, Clone, Debug, Reflect)]
-struct Person {
-    id: u32,
-    first_name: String,
-    last_name: String,
-    age: u32,
-    height: f32,
-    married: bool,
-    address: String,
-    date_of_birth: u32,
-    comments: String
-}
+use crate::model::Person;
+mod model;
 
 #[tokio::main]
 async fn main() {
@@ -25,7 +14,7 @@ async fn main() {
     _ = fs::remove_file("G:\\Test.db");
 
     //Locally persisted database
-    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into(), 15).await;
 
     let mut sw = stopwatch::Stopwatch::start_new();
 
@@ -44,7 +33,7 @@ async fn main() {
             comments: "It's very cold up there. Send help!".into()
         };
 
-        file_db.insert_value(person).await;
+        file_db.insert_value(&person).await;
     }
 
     println!("Time elapsed for inserting {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
@@ -102,6 +91,7 @@ async fn main() {
         .unwrap();
 
     let length = persons.len();
+    
     drop(length);
 
     println!("{:?}", persons);
