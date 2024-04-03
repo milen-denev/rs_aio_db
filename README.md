@@ -3,12 +3,14 @@
 
 ## Features
 
-- Auto migration: If additional or fewer fields are introduced to a structure, it immediately updates the required alterations to the database schema.
+- Auto migration: If additional or fewer fields are introduced to a structure, it immediately updates the database schema.
 - Local or In-Memory Capability: All functionality operates within local storage or in-memory systems.
-- Create records, retrieve one or many, update them or delete them with a dead simple ORM-like API.
-- Performance: Offers very good performance, by doing some preliminary tests it seems that the overhead from both main libraries that I use (libsql and bevy_reflect) plus the overhead from my library is small enough to be unnoticeable, reading 1000 rows one by one took 28ms. 
+- Fully implemented CRUD functionality
+- Highly Performant: Offers very good performance, by doing some preliminary tests it seems that the overhead from both main libraries that I use (libsql and bevy_reflect) plus the overhead from my library is small enough to be unnoticeable, reading 1000 rows one by one took 28ms. 
 - Async Support with Tokio
-- Highly Concurrent
+- Highly Concurrent due to the internal connection pooling
+- ORM-like API that is dead simple to use
+- Use anywhere
 
 ## Production Readiness 
 
@@ -25,7 +27,7 @@ Use this in production at your own risk. Currently I consider this to be Alpha a
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.5.6"
+rs_aio_db = "0.5.7"
 env_logger = "0.11.3"
 tokio = "1.37.0"
 bevy_reflect = "0.13.1"
@@ -146,8 +148,13 @@ async fn main() {
 ```
 
 ### Benchmarks
+
+####Figure 1
 ![image](https://github.com/milen-denev/rs_aio_db/blob/master/benches/images/benchmark_02042023.jpg)
+
+####Figure 2
 ![image](https://github.com/milen-denev/rs_aio_db/blob/master/benches/images/high_con_perf_03042024.jpg)
+
 #### Explanation
 
 **First Image:**

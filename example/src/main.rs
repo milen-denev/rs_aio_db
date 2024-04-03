@@ -17,7 +17,13 @@ async fn main() {
     let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into(), 15).await;
 
     //In-Memory database
-    //let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into()).await;
+    let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into()).await;
+
+    //Remote database for Torso (DB). This project is not affiliated but since it works it's added as an option.
+    let remote_db = AioDatabase::create_remote_dont_use_only_for_testing::<Person>(
+        "libsql://<SOME_SUBDOMAIN>.turso.io".into(),
+        "<SOME_TOKEN>".into(),
+        "<SOME_TABLE_NAME>".into()).await;
 
     file_db.insert_value(&Person {
         name: "Mylo".into(),

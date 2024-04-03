@@ -96,7 +96,7 @@ use super::models::Schema;
 pub struct AioDatabase {
      name: String,
      conn: Pool<AioDatabaseConnection>,
-     schema: Vec<Schema>
+     schema: Box<Vec<Schema>>
 }
 
 pub(crate) struct AioDatabaseConnection {
@@ -214,6 +214,53 @@ impl AioDatabase {
                change_db_settings(&connection).await;
           }
           
+          let db = AioDatabase {
+               name: name,
+               conn: conn_pool,
+               schema: generic_schema
+          };
+
+          return db;
+     }
+
+     ///Create remote database.
+     pub async fn create_remote_dont_use_only_for_testing<'a, T>(url: String, auth_token: String, name: String ,max_pool_size: u32) -> AioDatabase  where T: Default + Struct + Clone  {       
+          let builder = Builder::new_remote(url, auth_token).build().await.unwrap();
+          let aio_conn = AioDatabaseConnection {
+               builder: builder
+          };
+
+          let conn_pool = r2d2::Builder::<AioDatabaseConnection>::new().max_size(max_pool_size).build(aio_conn).unwrap();
+          let connection = conn_pool.clone().get().unwrap();
+
+          let generic_schema = get_schema_from_generic::<T>();
+          let current_schema_option = get_current_db_schema(&name, &connection).await;
+
+          if let Some(current_schema) = current_schema_option {
+               debug!("Current Db schema: {:?}", current_schema);
+
+               for current in current_schema.iter() {
+                    if !generic_schema.iter().any(|x| x.field_name == current.field_name) {
+                         info!("Dropping column: {}", current.field_name.as_str());
+                         alter_table_drop_column(&name, current.field_name.as_str(), &connection).await;
+                         continue;
+                    }
+               }
+
+               for generic_field in generic_schema.iter() {
+                    if !current_schema.iter().any(|x| x.field_name == generic_field.field_name) {
+                         info!("Adding column: {} as {}", generic_field.field_name.as_str(), generic_field.field_type.as_str());
+                         alter_table_new_column(&name, generic_field, &connection).await;
+                         continue;
+                    }
+               }
+          }
+          else {
+               debug!("Creating table {} with schema: {:?}", name, generic_schema);
+               create_table(&generic_schema, &name, &connection).await;
+               change_db_settings(&connection).await;
+          }
+
           let db = AioDatabase {
                name: name,
                conn: conn_pool,

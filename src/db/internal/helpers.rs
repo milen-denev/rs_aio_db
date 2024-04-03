@@ -16,7 +16,7 @@ pub(crate) fn get_system_char_delimiter() -> &'static str {
      }
 }
 
-pub(crate) fn get_schema_from_generic<T:  Default + Struct>() -> Vec<Schema> {  
+pub(crate) fn get_schema_from_generic<T:  Default + Struct>() -> Box<Vec<Schema>> {  
      let default_t = T::default();
      let default_t2 = T::default();
      let my_struct: Box<dyn Struct> = Box::new(default_t);
@@ -24,7 +24,7 @@ pub(crate) fn get_schema_from_generic<T:  Default + Struct>() -> Vec<Schema> {
      let ReflectRef::Struct(reflected) = default_t2.reflect_ref() else { unreachable!() };
 
      let count = my_struct.iter_fields().count();
-     let mut schema_vec: Vec<Schema> = Vec::with_capacity(count);
+     let mut schema_vec: Box<Vec<Schema>> = Box::new(Vec::with_capacity(count));
 
      for (i, field) in my_struct.iter_fields().enumerate() {
           let field_name = reflected.name_at(i).unwrap();

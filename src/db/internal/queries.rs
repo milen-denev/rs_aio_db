@@ -27,26 +27,30 @@ pub(crate) async fn change_db_settings(connection: &Connection) {
 }
 
 pub(crate) async fn get_current_db_schema(name: &str, connection: &Connection) -> Option<Vec<Schema>> {   
-     let mut stmt = connection
+     let stmt_res = connection
           .prepare("SELECT sql FROM sqlite_schema WHERE name = ?1")
-          .await
-          .unwrap();
+          .await;
 
-     let result_row = stmt
-          .query([name])
-          .await
-          .unwrap()
-          .next()
-          .await
-          .unwrap();
+     if let Ok(mut stmt) = stmt_res {
+          let result_row = stmt
+               .query([name])
+               .await
+               .unwrap()
+               .next()
+               .await
+               .unwrap();
 
-     if let Some(row) = result_row {
-          let rows = row.get::<String>(0).unwrap();
-          let current_schema = get_current_schema(rows);
-          return Some(current_schema);
+          if let Some(row) = result_row {
+               let rows = row.get::<String>(0).unwrap();
+               let current_schema = get_current_schema(rows);
+               return Some(current_schema);
+          }
+          else {
+               return None;
+          }
      }
      else {
-         return None;
+          return None;
      }
 }
 
