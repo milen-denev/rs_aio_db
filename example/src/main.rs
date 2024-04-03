@@ -10,7 +10,7 @@ use crate::model::Person;
 
 #[tokio::main]
 async fn main() {
-    std::env::set_var("RUST_LOG", "debug");
+    std::env::set_var("RUST_LOG", "error");
     env_logger::init();
 
     //Locally persisted database
@@ -89,6 +89,8 @@ async fn main() {
 async fn index(pool: web::Data<Arc<AioDatabase>>) -> impl Responder {
     let record = pool
         .query()
+        .field("name")
+        .where_is(Operator::Ne("Not Mylo".into()), None)
         .get_single_value::<Person>()
         .await
         .unwrap();

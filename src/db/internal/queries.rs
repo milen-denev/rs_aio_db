@@ -108,7 +108,9 @@ pub(crate) fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder
 
      let schema = query_builder.db.get_schema();
 
-     if options.len() > 1 {
+     let len = options.len();
+
+     if len > 1 {
           for option in options.iter().take(options.iter().len() - 1) {
                let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
                let next = option.next.as_ref().unwrap();
@@ -117,12 +119,14 @@ pub(crate) fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder
           }
      }
 
-     let option = options.iter().last().unwrap();
+     if len > 0 {
+          let option = options.iter().last().unwrap();
 
-     let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
-     let next = option.next.as_ref().unwrap();
-     let operator = option.operator.as_ref().unwrap();
-     query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, true, Some(next));
+          let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
+          let next = option.next.as_ref().unwrap();
+          let operator = option.operator.as_ref().unwrap();
+          query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, true, Some(next));     
+     }
 
      debug!("Executing select query: {}", query);
 

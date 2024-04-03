@@ -8,6 +8,7 @@
 - Create records, retrieve one or many, update them or delete them with a dead simple ORM-like API.
 - Performance: Offers very good performance, by doing some preliminary tests it seems that the overhead from both main libraries that I use (libsql and bevy_reflect) plus the overhead from my library is small enough to be unnoticeable, reading 1000 rows one by one took 28ms. 
 - Async Support with Tokio
+- Highly Concurrent
 
 ## Production Readiness 
 
@@ -24,7 +25,7 @@ Use this in production at your own risk. Currently I consider this to be Alpha a
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.5.5"
+rs_aio_db = "0.5.6"
 env_logger = "0.11.3"
 tokio = "1.37.0"
 bevy_reflect = "0.13.1"
@@ -146,5 +147,11 @@ async fn main() {
 
 ### Benchmarks
 ![image](https://github.com/milen-denev/rs_aio_db/blob/master/benches/images/benchmark_02042023.jpg)
-##### Explanation
+![image](https://github.com/milen-denev/rs_aio_db/blob/master/benches/images/high_con_perf_03042024.jpg)
+#### Explanation
+
+**First Image:**
 All of this 4 benchmarks has been done synchronously. The point of synchronously executing 1000 times each test was to see how much overhead does my library add to libsql and bevy_reflect. As it seems from the 3rd test which executed 1000 times not much (**28ms**). For retrieving 1 row it took on average 0.0028ms or 28us which is fast. Let's not forget the latency of the SSD itself and the Sqlite engine which for sure adds more to the equation. When executed the first and second test scenario my SSD reached latency of 21.1ms and 90% usage for sure is the reason behind the 3+ seconds for 1000 row inserts and row updates. It's under investigation.
+
+**Second Image:**
+The image shows the result of a K6 on actix-web + AioDatabase setup. It performed insanely well on 5000 concurrent connections with a pool size of 15. The code behind this can be be found under **/example** folder within the repository.
