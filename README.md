@@ -50,10 +50,10 @@ async fn main() {
     env_logger::init();
 
     //Locally persisted database
-    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into(), 15).await;
 
     //In-Memory database
-    let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into()).await;
+    let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into(), 15).await;
 
     file_db.insert_value(Person {
         name: "Mylo".into(),
