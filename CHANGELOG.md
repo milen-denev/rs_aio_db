@@ -1,5 +1,8 @@
 # Aio Database Release Notes
 
+### v5.5
+- Hotfix: If a query returns 1 result / row panics the application 
+
 ### v5.4
 - Internal: Added connection pooling
 - Internal: Changed journal_mode to WAL

@@ -108,11 +108,13 @@ pub(crate) fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder
 
      let schema = query_builder.db.get_schema();
 
-     for option in options.iter().take(options.iter().len() - 1) {
-          let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
-          let next = option.next.as_ref().unwrap();
-          let operator = option.operator.as_ref().unwrap();
-          query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, false, Some(next));
+     if options.len() > 1 {
+          for option in options.iter().take(options.iter().len() - 1) {
+               let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
+               let next = option.next.as_ref().unwrap();
+               let operator = option.operator.as_ref().unwrap();
+               query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, false, Some(next));
+          }
      }
 
      let option = options.iter().last().unwrap();

@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use rs_aio_db::db::aio_query::{Next, Operator};
 use rs_aio_db::db::aio_database::AioDatabase;
 mod model;
-use actix_web::{get, App, Responder, HttpServer};
+use actix_web::{get, web, App, HttpServer, Responder};
 
 //DON'T PLACE WITHIN THE SAME DIRECTORY MODELS AND ACTIX ENDPOINTS
 use crate::model::Person;
@@ -12,12 +14,12 @@ async fn main() {
     env_logger::init();
 
     //Locally persisted database
-    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
+    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into(), 15).await;
 
     //In-Memory database
     //let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into()).await;
 
-    file_db.insert_value(Person {
+    file_db.insert_value(&Person {
         name: "Mylo".into(),
         age: 0,
         height: 0,
@@ -55,16 +57,27 @@ async fn main() {
 
     println!("Updated rows: {:?}", partial_update_rows);
 
+    file_db.insert_value(&Person {
+        name: "Mylo 300".into(),
+        age: 0,
+        height: 0,
+        married: true
+    }).await;
+
     let delete_rows = file_db
         .query()
         .field("name")
-        .where_is(Operator::Eq("Mylo".into()), None)
+        .where_is(Operator::Eq("Mylo 300".into()), None)
         .delete_value::<Person>().await;
 
     println!("Deleted rows: {:?}", delete_rows);
 
-    _ = HttpServer::new(|| {
-        App::new().service(index)
+    let arc = Arc::new(file_db);
+
+    _ = HttpServer::new(move || {
+        App::new()
+            .app_data(web::Data::new(arc.clone()))
+            .service(index)
     })
     .bind(("127.0.0.1", 80))
     .unwrap()
@@ -73,6 +86,12 @@ async fn main() {
 }
 
 #[get("/")]
-async fn index() -> impl Responder {
-   format!("Db Called out!")
+async fn index(pool: web::Data<Arc<AioDatabase>>) -> impl Responder {
+    let record = pool
+        .query()
+        .get_single_value::<Person>()
+        .await
+        .unwrap();
+
+   format!("Db Called out! First retrieved record: {}", record.name)
 }
