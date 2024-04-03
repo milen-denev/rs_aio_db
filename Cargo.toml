@@ -3,7 +3,7 @@ exclude = ["example/*", "benches/*"]
 
 [package]
 name = "rs_aio_db"
-version = "0.5.4"
+version = "0.5.5"
 edition = "2021"
 repository = "https://github.com/milen-denev/rs_aio_db"
 license = "Apache-2.0"
