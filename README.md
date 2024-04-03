@@ -149,10 +149,10 @@ async fn main() {
 
 ### Benchmarks
 
-####Figure 1
+#### Figure 1
 ![image](https://github.com/milen-denev/rs_aio_db/blob/master/benches/images/benchmark_02042023.jpg)
 
-####Figure 2
+#### Figure 2
 ![image](https://github.com/milen-denev/rs_aio_db/blob/master/benches/images/high_con_perf_03042024.jpg)
 
 #### Explanation
