@@ -1555,7 +1555,7 @@ dependencies = [
 
 [[package]]
 name = "rs_aio_db"
-version = "0.5.7"
+version = "0.5.8"
 dependencies = [
  "bevy_reflect",
  "bincode",
