@@ -1,5 +1,8 @@
 # Aio Database Release Notes
 
+### v5.8
+- Added support for Vec<u8> type (BLOB type). This allows to save any data in the database, even files
+
 ### v5.7
 - Internal: Increased reliability then creating a database table
 - Added **create_remote** for testing purposes

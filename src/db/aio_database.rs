@@ -7,6 +7,8 @@ use log::debug;
 use log::info;
 use r2d2::ManageConnection;
 use r2d2::Pool;
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::db::internal::helpers::get_system_char_delimiter;
 use crate::db::internal::queries::alter_table_drop_column;
@@ -332,5 +334,15 @@ impl AioDatabase {
      pub(crate) async fn delete_value<'a, T: Default + Struct + Clone>(&self, where_query: String) -> u64 {
           let conn = self.conn.clone().get().unwrap();
           return delete_value::<T>(self.get_name(), &where_query, conn).await;
+     }
+
+     pub fn get_bytes<'a, S: Serialize + Deserialize<'a>>(struct_to_bytes: S) -> Vec<u8> {
+          let bytes = bincode::serialize(&struct_to_bytes).unwrap();
+          return bytes;
+     }
+
+     pub fn get_struct<'a, S: Serialize + Deserialize<'a>>(vec_u8_to_struct: &'a Vec<u8>) -> S {
+          let bytes = bincode::deserialize(vec_u8_to_struct).unwrap();
+          return bytes;
      }
 }

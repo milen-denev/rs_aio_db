@@ -10,26 +10,34 @@ use crate::model::Person;
 
 #[tokio::main]
 async fn main() {
-    std::env::set_var("RUST_LOG", "error");
+    std::env::set_var("RUST_LOG", "trace");
     env_logger::init();
-
+    
     //Locally persisted database
     let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into(), 15).await;
 
     //In-Memory database
-    let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into()).await;
+    let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into(), 15).await;
 
     //Remote database for Torso (DB). This project is not affiliated but since it works it's added as an option.
     let remote_db = AioDatabase::create_remote_dont_use_only_for_testing::<Person>(
         "libsql://<SOME_SUBDOMAIN>.turso.io".into(),
         "<SOME_TOKEN>".into(),
         "<SOME_TABLE_NAME>".into()).await;
-
+    
+    let mut hash_map = HashMap::new();
+    hash_map.insert("Key1".into(), "Value1".into());
+    
     file_db.insert_value(&Person {
         name: "Mylo".into(),
         age: 0,
         height: 0,
-        married: true
+        married: true,
+        some_blob: AioDatabase::get_bytes(AnotherStruct {
+            data_1: 5,
+            data_2: 10.4,
+            data_3:  hash_map.clone()
+        })
     }).await;
 
     let get_record = file_db
@@ -50,7 +58,12 @@ async fn main() {
             name: "Mylo".into(),
             age: 0,
             height: 5,
-            married: false
+            married: false,
+            some_blob: AioDatabase::get_bytes(AnotherStruct {
+                data_1: 5,
+                data_2: 10.4,
+                data_3: hash_map.clone()
+            })
         }).await;
 
     println!("Updated rows: {:?}", update_rows);
@@ -67,7 +80,12 @@ async fn main() {
         name: "Mylo 300".into(),
         age: 0,
         height: 0,
-        married: true
+        married: true,
+        some_blob: AioDatabase::get_bytes(AnotherStruct {
+            data_1: 5,
+            data_2: 10.4,
+            data_3:  hash_map.clone()
+        })
     }).await;
 
     let delete_rows = file_db

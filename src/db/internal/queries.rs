@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use bevy_reflect::Struct;
+use hex::encode;
 use libsql::Connection;
 use log::debug;
 use r2d2::PooledConnection;
@@ -26,28 +27,32 @@ pub(crate) async fn change_db_settings(connection: &Connection) {
           .await;
 }
 
-pub(crate) async fn get_current_db_schema(name: &str, connection: &Connection) -> Option<Vec<Schema>> {   
-     let stmt_res = connection
-          .prepare("SELECT sql FROM sqlite_schema WHERE name = ?1")
+pub(crate) async fn get_current_db_schema(name: &str, connection: &Connection) -> Option<Vec<Schema>> {  
+     let query = format!("SELECT sql FROM sqlite_schema WHERE name = {}", name);
+
+     let result_query = connection
+          .query(&query, ())
           .await;
 
-     if let Ok(mut stmt) = stmt_res {
-          let result_row = stmt
-               .query([name])
-               .await
-               .unwrap()
+     if let Ok(mut result_row) = result_query {
+          let result_rows = result_row
                .next()
-               .await
-               .unwrap();
+               .await;
 
-          if let Some(row) = result_row {
-               let rows = row.get::<String>(0).unwrap();
-               let current_schema = get_current_schema(rows);
-               return Some(current_schema);
+          if let Ok(result_row) = result_rows {
+               if let Some(row) = result_row {
+                    let rows = row.get::<String>(0).unwrap();
+                    let current_schema = get_current_schema(rows);
+                    return Some(current_schema);
+               }
+               else {
+                    return None;
+               }
           }
           else {
                return None;
           }
+
      }
      else {
           return None;
@@ -89,12 +94,30 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_
      query.push_str(" VALUES (");
 
      for generic_value in generic_values.iter().take(generic_values.len() - 1) {
-          query.push_str(format!("{:?}", generic_value.field_value).as_str());
-          query.push(',');
+          if generic_value.field_type == "Vec" {
+               let vec_u8 = generic_value.field_value.as_any().downcast_ref::<Vec<u8>>().unwrap();
+               let hex = encode(vec_u8);
+               query.push_str(format!("x'{}'", hex).as_str());
+               query.push(',');
+          }
+          else {
+               query.push_str(format!("{:?}", generic_value.field_value).as_str());
+               query.push(',');
+          }
      }
 
-     query.push_str(format!("{:?}", generic_values.last().unwrap().field_value).as_str());
-     query.push(')');
+     let last = generic_values.last().unwrap();
+
+     if last.field_type == "Vec" {
+          let vec_u8 = last.field_value.as_any().downcast_ref::<Vec<u8>>().unwrap();
+          let hex = encode(vec_u8);
+          query.push_str(format!("x'{}'", hex).as_str());
+          query.push(')');
+     }
+     else {
+          query.push_str(format!("{:?}", last.field_value).as_str());
+          query.push(')');
+     }
 
      debug!("Executing insert query: {}", query);
 
@@ -173,18 +196,38 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone>(
      for generic_value in generic_values.iter().take(generic_values.len() - 1) {
           let name = generic_value.field_name.as_str();
           let value = generic_value.field_value;
-          let set_query = format!("{} = {:?}", name, value).replace("\"", "'");
-          query.push_str(set_query.as_str());
-          query.push_str(", ");
+
+          if generic_value.field_type == "Vec" {
+               let vec_u8 = generic_value.field_value.as_any().downcast_ref::<Vec<u8>>().unwrap();
+               let hex = encode(vec_u8);
+               let set_query = format!("{} = x'{}'", name, hex);
+               query.push_str(set_query.as_str());
+               query.push_str(", ");
+          }
+          else {
+               let set_query = format!("{} = {:?}", name, value).replace("\"", "'");
+               query.push_str(set_query.as_str());
+               query.push_str(", ");
+          }
      }
 
      let generic_value = generic_values.iter().last().unwrap();
 
      let name = generic_value.field_name.as_str();
      let value = generic_value.field_value;
-     let set_query = format!("{} = {:?}", name, value).replace("\"", "'");
-     query.push_str(set_query.as_str());
-     query.push(' ');
+
+     if generic_value.field_type == "Vec" {
+          let vec_u8 = generic_value.field_value.as_any().downcast_ref::<Vec<u8>>().unwrap();
+          let hex = encode(vec_u8);
+          let set_query = format!("{} = x'{}'", name, hex);
+          query.push_str(set_query.as_str());
+          query.push(' ');
+     }
+     else {
+          let set_query = format!("{} = {:?}", name, value).replace("\"", "'");
+          query.push_str(set_query.as_str());
+          query.push(' ');     
+     }
 
      query.push_str(where_query);
 

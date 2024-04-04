@@ -27,10 +27,11 @@ Use this in production at your own risk. Currently I consider this to be Alpha a
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.5.7"
+rs_aio_db = "0.5.8"
 env_logger = "0.11.3"
 tokio = "1.37.0"
 bevy_reflect = "0.13.1"
+serde = "1.0.197"
 ```
 
 ### main.rs
@@ -40,11 +41,19 @@ use rs_aio_db::db::aio_database::AioDatabase;
 use rs_aio_db::Reflect;
 
 #[derive(Default, Clone, Debug, Reflect)]
-struct Person {
-    name: String,
-    age: i32,
-    height: i32,
-    married: bool,
+pub struct Person {
+     pub name: String,
+     pub age: i32,
+     pub height: i32,
+     pub married: bool,
+     pub some_blob: Vec<u8>
+}
+
+#[derive(Serialize, Deserialize)]
+struct AnotherStruct {
+    pub data_1: i32,
+    pub data_2: f64,
+    pub data_3: HashMap<String, String>
 }
 
 #[tokio::main]
@@ -58,11 +67,21 @@ async fn main() {
     //In-Memory database
     let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into(), 15).await;
 
-    file_db.insert_value(Person {
+    let mut hash_map = HashMap::new();
+    hash_map.insert("Key1".into(), "Value1".into());
+
+    //Use AioDatabase::get_struct to get back your struct data type
+
+    file_db.insert_value(&Person {
         name: "Mylo".into(),
         age: 0,
         height: 0,
-        married: true
+        married: true,
+        some_blob: AioDatabase::get_bytes(AnotherStruct {
+            data_1: 5,
+            data_2: 10.4,
+            data_3:  hash_map.clone()
+        })
     }).await;
 
     let get_single_record = file_db
@@ -95,7 +114,12 @@ async fn main() {
             name: "Mylo".into(),
             age: 5,
             height: 5,
-            married: false
+            married: false,
+            some_blob: AioDatabase::get_bytes(AnotherStruct {
+                data_1: 5,
+                data_2: 10.4,
+                data_3:  hash_map.clone()
+            })
         }).await;
 
     println!("Updated rows: {:?}", update_rows);

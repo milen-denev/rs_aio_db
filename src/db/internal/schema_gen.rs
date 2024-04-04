@@ -17,6 +17,7 @@ pub(crate) fn get_sql_type(rust_type: &str) -> Option<String> {
           "f64" => return Some("REAL".into()),
           "char" => return Some("TEXT".into()),
           "String" => return Some("TEXT".into()),
+          "Vec" => return Some("BLOB".into()),
           _ => return None
      }
 }

@@ -1,9 +1,9 @@
-use std::fs;
+use std::{collections::HashMap, fs};
 
 use rs_aio_db::db::aio_query::Operator;
 use rs_aio_db::db::aio_database::AioDatabase;
 
-use crate::model::Person;
+use crate::model::{AnotherStruct, Person};
 mod model;
 
 #[tokio::main]
@@ -20,6 +20,10 @@ async fn main() {
 
     const TOTAL_ITERATIONS: u32 = 10;
 
+    let mut hash_map = HashMap::new();
+    hash_map.insert("Key1".into(), "Value1".into());
+
+
     for i in 0..TOTAL_ITERATIONS {
         let person = Person {
             id: i,
@@ -30,7 +34,12 @@ async fn main() {
             married: false,
             address: "North Pole, Ice Street 0, NP0001".into(),
             date_of_birth: 1000000,
-            comments: "It's very cold up there. Send help!".into()
+            comments: "It's very cold up there. Send help!".into(),
+            some_blob: AioDatabase::get_bytes(AnotherStruct {
+                data_1: 5,
+                data_2: 10.4,
+                data_3:  hash_map.clone()
+            })
         };
 
         file_db.insert_value(&person).await;
@@ -50,7 +59,12 @@ async fn main() {
             married: true,
             address: "North Pole, Ice Street 0, NP0001".into(),
             date_of_birth: 2000000,
-            comments: "It s very cold up there. Send help!".into()
+            comments: "It s very cold up there. Send help!".into(),
+            some_blob: AioDatabase::get_bytes(AnotherStruct {
+                data_1: 5,
+                data_2: 10.4,
+                data_3:  hash_map.clone()
+            })
         };
 
         file_db

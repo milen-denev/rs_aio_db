@@ -1950,9 +1950,9 @@ dependencies = [
 
 [[package]]
 name = "rs_aio_db"
-version = "0.5.5"
+version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0178f2b9e313c7ad7b3535a9a35a655527d25cd2de627da3a8c054fe3f5d2b4"
+checksum = "748a04fb82652526adacb19110cd5faceaa4a156f741e215dfc97993ff0827b4"
 dependencies = [
  "bevy_reflect",
  "env_logger",

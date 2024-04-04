@@ -1,4 +1,4 @@
-use bevy_reflect::{ GetField, ReflectMut, ReflectRef, Struct};
+use bevy_reflect::{GetField, ReflectMut, ReflectRef, Struct};
 use log::{debug, info};
 
 use crate::db::{aio_query::{Next, Operator, QueryRowResult}, models::{GenericValue, Schema}};
@@ -55,7 +55,7 @@ pub(crate) fn get_values_from_generic<'a, T:  Default + Struct + Clone>(value: &
           let field_type = field.reflect_type_ident().unwrap();
           
           debug!("Found field named '{}' with value '{:?}'", field_name, field_value);
-
+    
           schema_vec.push(GenericValue {
                field_name: field_name.into(),
                field_value: field_value,
@@ -127,6 +127,11 @@ pub(crate) fn set_values_from_row_result<'a, T:  Default + Struct + Clone>(row_r
                "String" => {
                     let value = row_result.row.get::<String>(i as i32).unwrap();
                     *t_struct.get_field_mut::<String>(field_name).unwrap() = value;
+               },
+               "Vec" => {
+                    let value = row_result.row.get::<Vec<u8>>(i as i32).unwrap();
+                    //let vec_u8_data = hex::decode(value).unwrap();
+                    *t_struct.get_field_mut::<Vec<u8>>(field_name).unwrap() = value;
                },
                _ => panic!("{} type not supported.", field_type)
           }

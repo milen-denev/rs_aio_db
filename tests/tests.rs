@@ -1,6 +1,7 @@
-use std::fs;
+use std::{collections::HashMap, fs};
 
 use rs_aio_db::{db::{aio_database::AioDatabase, aio_query::Operator}, Reflect};
+use serde::{Deserialize, Serialize};
 use tokio::runtime;
 
 #[derive(Default, Clone, Debug, Reflect)]
@@ -13,7 +14,15 @@ struct Person {
     married: bool,
     address: String,
     date_of_birth: u32,
-    comments: String
+    comments: String,
+    some_blob: Vec<u8>
+}
+
+#[derive(Serialize, Deserialize)]
+struct AnotherStruct {
+    pub data_1: i32,
+    pub data_2: f64,
+    pub data_3: HashMap<String, String>
 }
 
 #[test]
@@ -37,6 +46,9 @@ fn insert_value() {
 
           let file_db = AioDatabase::create::<Person>("G:\\".into(), "insert_value".into(), 15).await;
 
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
+
           let person = Person {
                id: 0,
                first_name: "Mylo".into(),
@@ -46,7 +58,12 @@ fn insert_value() {
                married: false,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into()
+               comments: "It^s very cold up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           file_db.insert_value(&person).await;
@@ -65,6 +82,10 @@ fn update_value() {
 
           let file_db = AioDatabase::create::<Person>("G:\\".into(), "update_value".into(), 15).await;
 
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
+
+
           let person = Person {
                id: 0,
                first_name: "Mylo".into(),
@@ -74,7 +95,12 @@ fn update_value() {
                married: false,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into()
+               comments: "It^s very cold up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           file_db.insert_value(&person).await;
@@ -97,6 +123,8 @@ fn retrieve_single_value() {
           _ = fs::remove_file("G:\\retrieve_single_value.db");
           let file_db = AioDatabase::create::<Person>("G:\\".into(), "retrieve_single_value".into(), 15).await;
 
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
 
           let person = Person {
                id: 0,
@@ -107,7 +135,12 @@ fn retrieve_single_value() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into()
+               comments: "It^s very cold up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           file_db.insert_value(&person).await;
@@ -137,6 +170,9 @@ fn retrieve_all_values() {
 
           let file_db = AioDatabase::create::<Person>("G:\\".into(), "retrieve_all_values".into(), 15).await;
 
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
+
           let person = Person {
                id: 0,
                first_name: "Mylo".into(),
@@ -146,7 +182,12 @@ fn retrieve_all_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into()
+               comments: "It^s very cold up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           let person2 = Person {
@@ -158,7 +199,12 @@ fn retrieve_all_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into()
+               comments: "It^s very cold up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           file_db.insert_value(&person).await;
@@ -196,6 +242,9 @@ fn delete_all_values() {
 
           let file_db = AioDatabase::create::<Person>("G:\\".into(), "delete_all_values".into(), 15).await;
 
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
+
           let person = Person {
                id: 0,
                first_name: "Mylo".into(),
@@ -205,7 +254,12 @@ fn delete_all_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into()
+               comments: "It^s very cold up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           let person2 = Person {
@@ -217,7 +271,12 @@ fn delete_all_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into()
+               comments: "It^s very cold up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           file_db.insert_value(&person).await;
@@ -244,6 +303,9 @@ fn contains_values() {
 
           let file_db = AioDatabase::create::<Person>("G:\\".into(), "contains_values".into(), 15).await;
 
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
+
           let person = Person {
                id: 0,
                first_name: "Mylo".into(),
@@ -253,7 +315,12 @@ fn contains_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very hot up there. Send help!".into()
+               comments: "It^s very hot up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           let person3 = Person {
@@ -265,7 +332,12 @@ fn contains_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very warm up there. Send help!".into()
+               comments: "It^s very warm up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           let person2 = Person {
@@ -277,7 +349,12 @@ fn contains_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very CoLd up there. Send help!".into()
+               comments: "It^s very CoLd up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           file_db.insert_value(&person).await;
@@ -304,6 +381,9 @@ fn starts_with_values() {
 
           let file_db = AioDatabase::create::<Person>("G:\\".into(), "starts_with_values".into(), 15).await;
 
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
+
           let person = Person {
                id: 0,
                first_name: "Mylo".into(),
@@ -313,7 +393,12 @@ fn starts_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very hot up there. Send help!".into()
+               comments: "It^s very hot up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           let person3 = Person {
@@ -325,7 +410,12 @@ fn starts_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very warm up there. It^^s Send help!".into()
+               comments: "It^s very warm up there. It^^s Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           let person2 = Person {
@@ -337,7 +427,12 @@ fn starts_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^^s very CoLd up there. Send help!".into()
+               comments: "It^^s very CoLd up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           file_db.insert_value(&person).await;
@@ -364,6 +459,9 @@ fn ends_with_values() {
 
           let file_db = AioDatabase::create::<Person>("G:\\".into(), "ends_with_values".into(), 15).await;
 
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
+
           let person = Person {
                id: 0,
                first_name: "Mylo".into(),
@@ -373,7 +471,12 @@ fn ends_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very hot up there. Send help!".into()
+               comments: "It^s very hot up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           let person3 = Person {
@@ -385,7 +488,12 @@ fn ends_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very warm up there HelP!!. Send help!".into()
+               comments: "It^s very warm up there HelP!!. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           let person2 = Person {
@@ -397,7 +505,12 @@ fn ends_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^^s very CoLd up there. Send HelP!!".into()
+               comments: "It^^s very CoLd up there. Send HelP!!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
           };
 
           file_db.insert_value(&person).await;
