@@ -691,9 +691,9 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "h2"
-version = "0.3.25"
+version = "0.3.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fbd2820c5e49886948654ab546d0688ff24530286bdcf8fca3cefb16d4618eb"
+checksum = "81fe527a889e1532da5c525686d96d4c2e74cdd345badf8dfef9f6b39dd5f5e8"
 dependencies = [
  "bytes",
  "fnv",
@@ -739,6 +739,12 @@ name = "hermit-abi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
+
+[[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "home"
@@ -1560,15 +1566,18 @@ dependencies = [
 
 [[package]]
 name = "rs_aio_db"
-version = "0.5.7"
+version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "748a04fb82652526adacb19110cd5faceaa4a156f741e215dfc97993ff0827b4"
+checksum = "dbad4e1e3d87ce0a3de59294d3c2214df15b66a5fc3cd13d838ecd080a99bd0d"
 dependencies = [
  "bevy_reflect",
+ "bincode",
  "env_logger",
+ "hex",
  "libsql",
  "log",
  "r2d2",
+ "serde",
  "stopwatch",
  "tokio",
 ]
