@@ -106,6 +106,7 @@ async fn main() {
 
     let length = persons.len();
     
+    #[allow(dropping_copy_types)]
     drop(length);
 
     println!("{:?}", persons);
