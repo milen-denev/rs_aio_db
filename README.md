@@ -27,7 +27,7 @@ Use this in production at your own risk. Currently I consider this to be Alpha a
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.5.8"
+rs_aio_db = "0.5.9"
 env_logger = "0.11.3"
 tokio = "1.37.0"
 bevy_reflect = "0.13.1"

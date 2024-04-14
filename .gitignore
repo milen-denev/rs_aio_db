@@ -1,3 +1,5 @@
 /target
 /example/target
 /benches/target
+/src/main.rs
+/src/model.rs

@@ -528,3 +528,234 @@ fn ends_with_values() {
           assert_eq!(retrieved_person.id, 655);
     });
 }
+
+#[test]
+fn any() {
+    let rt = runtime::Builder::new_current_thread().build().unwrap();
+    rt.block_on(async { 
+          _ = fs::remove_file("G:\\any.db");
+
+          let file_db = AioDatabase::create::<Person>("G:\\".into(), "any".into(), 15).await;
+
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
+
+          let person = Person {
+               id: 0,
+               first_name: "Mylo".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It^s very hot up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          let person3 = Person {
+               id: 1,
+               first_name: "Mylo 2".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It^s very warm up there. It^^s Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          let person2 = Person {
+               id: 655,
+               first_name: "Mylo 2".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It^^s very CoLd up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          file_db.insert_value(&person).await;
+          file_db.insert_value(&person2).await;
+          file_db.insert_value(&person3).await;
+
+          let any = file_db
+               .query()
+               .field("comments")
+               .where_is(Operator::Contains(("It^^s").to_string()), None)
+               .any::<Person>()
+               .await;
+
+          assert_eq!(any, true);
+    });
+}
+
+#[test]
+fn all() {
+    let rt = runtime::Builder::new_current_thread().build().unwrap();
+    rt.block_on(async { 
+          _ = fs::remove_file("G:\\all0.db");
+
+          let file_db = AioDatabase::create::<Person>("G:\\".into(), "all0".into(), 15).await;
+
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
+
+          let person = Person {
+               id: 0,
+               first_name: "Mylo".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It^s very hot up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          let person3 = Person {
+               id: 1,
+               first_name: "Mylo 2".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It^s very warm up there. It^^s Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          let person2 = Person {
+               id: 655,
+               first_name: "Mylo 2".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It^^s very CoLd up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          file_db.insert_value(&person).await;
+          file_db.insert_value(&person2).await;
+          file_db.insert_value(&person3).await;
+
+          let all = file_db
+               .query()
+               .field("address")
+               .where_is(Operator::Contains(("North Pole").to_string()), None)
+               .all::<Person>()
+               .await;
+
+          assert_eq!(all, true);
+    });
+}
+
+#[test]
+fn count() {
+    let rt = runtime::Builder::new_current_thread().build().unwrap();
+    rt.block_on(async { 
+          _ = fs::remove_file("G:\\count.db");
+
+          let file_db = AioDatabase::create::<Person>("G:\\".into(), "count".into(), 15).await;
+
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
+
+          let person = Person {
+               id: 0,
+               first_name: "Mylo".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It^s very hot up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          let person3 = Person {
+               id: 1,
+               first_name: "Mylo 2".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It^s very warm up there. It^^s Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          let person2 = Person {
+               id: 655,
+               first_name: "Mylo 2".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It^^s very CoLd up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          file_db.insert_value(&person).await;
+          file_db.insert_value(&person2).await;
+          file_db.insert_value(&person3).await;
+
+          let count = file_db
+               .query()
+               .field("address")
+               .where_is(Operator::Contains(("North Pole").to_string()), None)
+               .count::<Person>()
+               .await;
+
+          assert_eq!(count, 3);
+    });
+}

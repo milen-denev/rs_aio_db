@@ -14,10 +14,13 @@ use crate::db::internal::helpers::get_system_char_delimiter;
 use crate::db::internal::queries::alter_table_drop_column;
 use crate::db::internal::queries::alter_table_new_column;
 
+use super::aio_query::AnyCountResult;
 use super::aio_query::QueryBuilder;
 use super::aio_query::QueryRowResult;
 use super::aio_query::QueryRowsResult;
 use super::internal::helpers::get_schema_from_generic;
+use super::internal::queries::all_query;
+use super::internal::queries::any_count_query;
 use super::internal::queries::change_db_settings;
 use super::internal::queries::create_table;
 use super::internal::queries::delete_value;
@@ -334,6 +337,82 @@ impl AioDatabase {
      pub(crate) async fn delete_value<'a, T: Default + Struct + Clone>(&self, where_query: String) -> u64 {
           let conn = self.conn.clone().get().unwrap();
           return delete_value::<T>(self.get_name(), &where_query, conn).await;
+     }
+
+     pub(crate) async fn any<'a, T: Default + Struct + Clone>(&self, where_query: String) -> bool {
+          let conn = self.conn.clone().get().unwrap();
+          let query = any_count_query::<T>(self.get_name(), &where_query).await;
+          
+          if let Some(mut query_result) = QueryRowResult::<AnyCountResult>::new(query, conn).await {
+               get_single_value::<AnyCountResult>(&mut query_result);
+               if let Some(any_result) = query_result.value {
+                    return match any_result.count_total {
+                         0 => false,
+                         1.. => true
+                    };
+               }
+               else {
+                   return false;
+               }
+          }
+          else {
+               return false;
+          }
+     }
+
+     pub(crate) async fn count<'a, T: Default + Struct + Clone>(&self, where_query: String) -> u64 {
+          let conn = self.conn.clone().get().unwrap();
+          let query = any_count_query::<T>(self.get_name(), &where_query).await;
+          
+          if let Some(mut query_result) = QueryRowResult::<AnyCountResult>::new(query, conn).await {
+               get_single_value::<AnyCountResult>(&mut query_result);
+               if let Some(any_result) = query_result.value {
+                    return any_result.count_total;
+               }
+               else {
+                   return 0;
+               }
+          }
+          else {
+               return 0;
+          }
+     }
+
+     pub(crate) async fn all<'a, T: Default + Struct + Clone>(&self, where_query: String) -> bool {
+          let conn = self.conn.clone().get().unwrap();
+          let conn2 = self.conn.clone().get().unwrap();
+          let all_query = all_query::<T>(self.get_name()).await;
+          let any_query = any_count_query::<T>(self.get_name(), &where_query).await;
+          
+          if let Some(mut query_result) = QueryRowResult::<AnyCountResult>::new(all_query, conn).await {
+               get_single_value::<AnyCountResult>(&mut query_result);
+               if let Some(all_result) = query_result.value.clone() {
+                    let all_records = all_result.count_total.clone();
+                    
+                    drop(all_result);
+                    drop(query_result);
+
+                    if let Some(mut query_result) = QueryRowResult::<AnyCountResult>::new(any_query, conn2).await {
+                         get_single_value::<AnyCountResult>(&mut query_result);
+                         if let Some(any_result) = query_result.value {
+
+                              return any_result.count_total == all_records;
+                         }
+                         else {
+                             return true;
+                         }
+                    }
+                    else {
+                         return true;
+                    }
+               }
+               else {
+                   return true;
+               }
+          }
+          else {
+               return true;
+          }
      }
 
      pub fn get_bytes<'a, S: Serialize + Deserialize<'a>>(struct_to_bytes: S) -> Vec<u8> {

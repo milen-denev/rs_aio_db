@@ -96,6 +96,33 @@ async fn main() {
 
     println!("Deleted rows: {:?}", delete_rows);
 
+    let any = file_db
+        .query()
+        .field("name")
+        .where_is(Operator::Ne("Mylo 300".into()), None)
+        .any::<Person>()
+        .await;
+
+    println!("Any: {:?}", any);
+
+    let count = file_db
+        .query()
+        .field("name")
+        .where_is(Operator::Ne("Mylo 300".into()), None)
+        .count::<Person>()
+        .await;
+
+    println!("Count: {:?}", count);
+
+    let all = file_db
+        .query()
+        .field("name")
+        .where_is(Operator::Contains("Mylo 900".into()), None)
+        .all::<Person>()
+        .await;
+
+    println!("All: {:?}", all);
+
     let arc = Arc::new(file_db);
 
     _ = HttpServer::new(move || {

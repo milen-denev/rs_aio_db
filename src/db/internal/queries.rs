@@ -155,7 +155,7 @@ pub(crate) fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder
           query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, true, Some(next));     
      }
 
-     debug!("Executing select query: {}", query);
+     debug!("Executing get query: {}", query);
 
      return query;
 }
@@ -180,7 +180,7 @@ pub(crate) fn generate_where_query<'a, T:  Default + Struct + Clone>(query_build
      let operator = option.operator.as_ref().unwrap();
      query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, true, Some(next));
 
-     debug!("Executing select query: {}", query);
+     debug!("Executing where query: {}", query);
 
      return query;
 }
@@ -231,7 +231,7 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone>(
 
      query.push_str(where_query);
 
-     debug!("Executing insert query: {}", query);
+     debug!("Executing update query: {}", query);
 
      let rows_affected = connection.execute(&query, ())
           .await
@@ -259,7 +259,7 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone>(
 
      query.push_str(where_query);
 
-     debug!("Executing insert query: {}", query);
+     debug!("Executing partial update query: {}", query);
 
      let rows_affected = connection.execute(&query, ())
           .await
@@ -277,7 +277,7 @@ pub(crate) async fn delete_value<T:  Default + Struct + Clone>(
      let mut query = format!("DELETE FROM {} ", table_name);
      query.push_str(where_query);
 
-     debug!("Executing insert query: {}", query);
+     debug!("Executing delete query: {}", query);
 
      let rows_affected = connection.execute(&query, ())
           .await
@@ -286,6 +286,26 @@ pub(crate) async fn delete_value<T:  Default + Struct + Clone>(
      drop(connection);
 
      return rows_affected;
+}
+
+pub(crate) async fn any_count_query<T:  Default + Struct + Clone>(
+     table_name: &str, 
+     where_query: &str) -> String {
+     let mut query = format!("SELECT COUNT(*) AS count_total FROM {} ", table_name);
+     query.push_str(where_query);
+
+     debug!("Executing any / count query: {}", query);
+
+     return query;
+}
+
+pub(crate) async fn all_query<T:  Default + Struct + Clone>(
+     table_name: &str) -> String {
+     let query = format!("SELECT COUNT(*) AS count_total FROM {} ", table_name);
+
+     debug!("Executing all query: {}", query);
+
+     return query;
 }
 
 pub(crate) fn get_single_value<'a, T:  Default + Struct + Clone>(query_result: &mut QueryRowResult<T>) {    

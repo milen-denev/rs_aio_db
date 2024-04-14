@@ -1,6 +1,7 @@
+use core::str;
 use std::sync::{Arc, RwLock};
 
-use bevy_reflect::Struct;
+use bevy_reflect::{Reflect, Struct};
 use libsql::{Row, Rows};
 use r2d2::PooledConnection;
 
@@ -117,11 +118,32 @@ impl QueryBuilder<'_> {
           return db.partial_update::<T>(field_name, field_value, where_query).await;
      }
 
-     /// Deletes **all values** hat match the query filter. Returns the number of rows affected.
+     /// Deletes **all values** that match the query filter. Returns the number of rows affected.
      pub async fn delete_value<'a, T: Default + Struct + Clone>(self) -> u64 {
           let db = self.db;
           let where_query = generate_where_query::<T>(&self);
           return db.delete_value::<T>(where_query).await;
+     }
+
+     /// Returns if any value / row matches the the query filter.
+     pub async fn any<'a, T: Default + Struct + Clone>(self) -> bool {
+          let db = self.db;
+          let where_query = generate_where_query::<T>(&self);
+          return db.any::<T>(where_query).await;
+     }
+
+     /// Returns the count of values / rows that match the the query filter.
+     pub async fn count<'a, T: Default + Struct + Clone>(self) -> u64 {
+          let db = self.db;
+          let where_query = generate_where_query::<T>(&self);
+          return db.count::<T>(where_query).await;
+     }
+
+     /// Returns if all rows / records match the the query filter.
+     pub async fn all<'a, T: Default + Struct + Clone>(self) -> bool {
+          let db = self.db;
+          let where_query = generate_where_query::<T>(&self);
+          return db.all::<T>(where_query).await;
      }
 }
 
@@ -220,4 +242,9 @@ impl<T> QueryRowsResult<T> {
                return None
           }
      }
+}
+
+#[derive(Default, Reflect, Clone)]
+pub(crate) struct AnyCountResult {
+     pub count_total: u64
 }

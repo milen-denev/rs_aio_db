@@ -1,5 +1,9 @@
 # Aio Database Release Notes
 
+### v5.9
+- Added **any**, **count** and **all** queries
+- Fix typos
+
 ### v5.8
 - Added support for Vec<u8> type (BLOB type). This allows to save any data in the database, even files
 
