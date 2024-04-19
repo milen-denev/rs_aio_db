@@ -228,9 +228,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_macro_utils"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3bbbf88fc577a21ee9994feed2253ee9838b63fb976783b7a549edfbe07c6764"
+checksum = "eb270c98a96243b29465139ed10bda2f675d00a11904f6588a5f7fc4774119c7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -241,15 +241,15 @@ dependencies = [
 
 [[package]]
 name = "bevy_ptr"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea003584000ef02b73800cc7cb62ee74792fff431e6a8df36863c43bf56fb491"
+checksum = "8050e2869fe341db6874203b5a01ff12673807a2c7c80cb829f6c7bea6997268"
 
 [[package]]
 name = "bevy_reflect"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1101dbd44ae35e5c66802e46cfba1182e49f6163c824bee380d4acab5b2f640"
+checksum = "ccbd7de21d586457a340a0962ad0747dc5098ff925eb6b27a918c4bdd8252f7b"
 dependencies = [
  "bevy_ptr",
  "bevy_reflect_derive",
@@ -262,9 +262,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_reflect_derive"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2a8791d5841a6db862571f709d7ee70c2a5eb1634c3a4329817d04f0e307c2d"
+checksum = "3ce33051bd49036d4a5a62aa3f2068672ec55f3ebe92aa0d003a341f15cc37ac"
 dependencies = [
  "bevy_macro_utils",
  "proc-macro2",
@@ -275,9 +275,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_utils"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac758c2e8509a4a260b7a91f920be3beee6ab9e76e388494240ac5d672779159"
+checksum = "5a9f845a985c00e0ee8dc2d8af3f417be925fb52aad4bda5b96e2e58a2b4d2eb"
 dependencies = [
  "ahash",
  "bevy_utils_proc_macros",
@@ -294,9 +294,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_utils_proc_macros"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "014c80f466ed01821a2e602d63cd5076915c1af5de5fa3c074cc4a9ca898ada7"
+checksum = "bef158627f30503d5c18c20c60b444829f698d343516eeaf6eeee078c9a45163"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -741,6 +741,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
 
 [[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+
+[[package]]
 name = "home"
 version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -830,11 +836,11 @@ dependencies = [
  "hyper",
  "log",
  "rustls 0.22.3",
- "rustls-native-certs 0.7.0",
+ "rustls-native-certs",
  "rustls-pki-types",
  "tokio",
  "tokio-rustls 0.25.0",
- "webpki-roots 0.26.1",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -933,9 +939,9 @@ dependencies = [
 
 [[package]]
 name = "libsql"
-version = "0.3.2"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3879a4ed80a245fd4dd8c8fa139245653e86184ed3ab97a6d6ea592045d25793"
+checksum = "1bd17bcc143f2a5be449680dc63b91327d953bcabebe34a69c549fca8934ec9d"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -951,7 +957,7 @@ dependencies = [
  "hyper-rustls",
  "libsql-hrana",
  "libsql-sqlite3-parser",
- "libsql-sys",
+ "libsql-sys 0.5.0",
  "libsql_replication",
  "parking_lot",
  "serde",
@@ -960,7 +966,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tokio-util",
- "tonic",
+ "tonic 0.11.0",
  "tonic-web",
  "tower",
  "tower-http",
@@ -1039,6 +1045,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "libsql-sys"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5829f758a82418429de6cb0eb310502de78d0908efc3fe2f84b6a41f2f6bebd1"
+dependencies = [
+ "bytes",
+ "libsql-ffi",
+ "once_cell",
+ "tracing",
+ "zerocopy",
+]
+
+[[package]]
 name = "libsql_replication"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1050,7 +1069,7 @@ dependencies = [
  "bytes",
  "cbc",
  "libsql-rusqlite",
- "libsql-sys",
+ "libsql-sys 0.4.0",
  "parking_lot",
  "prost",
  "serde",
@@ -1058,7 +1077,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tokio-util",
- "tonic",
+ "tonic 0.10.2",
  "tracing",
  "uuid",
  "zerocopy",
@@ -1560,15 +1579,18 @@ dependencies = [
 
 [[package]]
 name = "rs_aio_db"
-version = "0.5.7"
+version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "748a04fb82652526adacb19110cd5faceaa4a156f741e215dfc97993ff0827b4"
+checksum = "767eb79f4336e1b4863bccad5ad8fcfcf750eb2dec39e6fea8db009154248a0b"
 dependencies = [
  "bevy_reflect",
+ "bincode",
  "env_logger",
+ "hex",
  "libsql",
  "log",
  "r2d2",
+ "serde",
  "stopwatch",
  "tokio",
 ]
@@ -1606,9 +1628,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.21.10"
+version = "0.21.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9d5a6813c0759e4609cd494e8e725babae6a2ca7b62a5536a13daaec6fcb7ba"
+checksum = "7fecbfb7b1444f477b345853b1fce097a2c6fb637b2bfb87e6bc5db0f043fae4"
 dependencies = [
  "log",
  "ring",
@@ -1628,18 +1650,6 @@ dependencies = [
  "rustls-webpki 0.102.2",
  "subtle",
  "zeroize",
-]
-
-[[package]]
-name = "rustls-native-certs"
-version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9aace74cb666635c918e9c12bc0d348266037aa8eb599b5cba565709a8dff00"
-dependencies = [
- "openssl-probe",
- "rustls-pemfile 1.0.4",
- "schannel",
- "security-framework",
 ]
 
 [[package]]
@@ -1954,7 +1964,7 @@ version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c28327cf380ac148141087fbfb9de9d7bd4e84ab5d2c28fbc911d753de8a7081"
 dependencies = [
- "rustls 0.21.10",
+ "rustls 0.21.11",
  "tokio",
 ]
 
@@ -2030,8 +2040,7 @@ dependencies = [
  "percent-encoding",
  "pin-project",
  "prost",
- "rustls 0.21.10",
- "rustls-native-certs 0.6.3",
+ "rustls 0.21.11",
  "rustls-pemfile 1.0.4",
  "tokio",
  "tokio-rustls 0.24.1",
@@ -2040,14 +2049,45 @@ dependencies = [
  "tower-layer",
  "tower-service",
  "tracing",
- "webpki-roots 0.25.4",
+]
+
+[[package]]
+name = "tonic"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76c4eb7a4e9ef9d4763600161f12f5070b92a578e1b634db88a6887844c91a13"
+dependencies = [
+ "async-stream",
+ "async-trait",
+ "axum",
+ "base64",
+ "bytes",
+ "h2",
+ "http",
+ "http-body",
+ "hyper",
+ "hyper-timeout",
+ "percent-encoding",
+ "pin-project",
+ "prost",
+ "rustls-native-certs",
+ "rustls-pemfile 2.1.1",
+ "rustls-pki-types",
+ "tokio",
+ "tokio-rustls 0.25.0",
+ "tokio-stream",
+ "tower",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+ "webpki-roots",
 ]
 
 [[package]]
 name = "tonic-web"
-version = "0.10.2"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fddb2a37b247e6adcb9f239f4e5cefdcc5ed526141a416b943929f13aea2cce"
+checksum = "dc3b0e1cedbf19fdfb78ef3d672cb9928e0a91a9cb4629cc0c916e8cff8aaaa1"
 dependencies = [
  "base64",
  "bytes",
@@ -2056,7 +2096,7 @@ dependencies = [
  "hyper",
  "pin-project",
  "tokio-stream",
- "tonic",
+ "tonic 0.11.0",
  "tower-http",
  "tower-layer",
  "tower-service",
@@ -2280,12 +2320,6 @@ dependencies = [
  "js-sys",
  "wasm-bindgen",
 ]
-
-[[package]]
-name = "webpki-roots"
-version = "0.25.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f20c57d8d7db6d3b86154206ae5d8fba62dd39573114de97c2cb0578251f8e1"
 
 [[package]]
 name = "webpki-roots"
