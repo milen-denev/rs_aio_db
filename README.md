@@ -14,7 +14,7 @@
 
 ## Production Readiness 
 
-Use this in production at your own risk. Currently I consider this to be Alpha almost Beta stage. There are known bugs, check the pinned Issue's tab. Although there are no observable major issues until v0.6 I don't recommend it for use in critical systems.
+This is used in production in affiliated company for specific use-case. Use this in production at your own risk. Currently I consider this to in beta stage. There are known bugs, check the pinned Issue's tab. Although there are no observable major issues until v0.6 I don't recommend it for use in critical systems.
 
 ## Planned Features
 
@@ -27,11 +27,11 @@ Use this in production at your own risk. Currently I consider this to be Alpha a
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.5.9"
+rs_aio_db = "0.5.10"
 env_logger = "0.11.3"
 tokio = "1.37.0"
 bevy_reflect = "0.13.1"
-serde = "1.0.197"
+serde = "1.0.198"
 ```
 
 ### main.rs

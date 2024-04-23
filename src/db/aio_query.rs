@@ -197,7 +197,7 @@ impl<T> QueryRowResult<T> {
                .query(&query, ())
                .await;
           
-          if let Ok(sql_rows) = sql_result {
+          if let Ok(mut sql_rows) = sql_result {
                let row_result = sql_rows
                     .next()
                     .await;
@@ -238,13 +238,10 @@ impl<T> QueryRowsResult<T> {
                .await;
 
           if let Ok(sql_rows) = sql_result {
-               let row_result = sql_rows
-                    .next()
-                    .await;
-               if rows.column_count() > 0 {
+               if sql_rows.column_count() > 0 {
                     return Some(QueryRowsResult::<T> {
                          value: None,
-                         rows: Arc::new(RwLock::new(rows))
+                         rows: Arc::new(RwLock::new(sql_rows))
                     });
                }
                else {
