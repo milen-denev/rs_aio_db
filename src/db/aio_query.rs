@@ -193,26 +193,32 @@ impl<T> QueryRowResult<T> {
      pub(crate) async fn new(
           query: String, 
           connection: PooledConnection<AioDatabaseConnection>) -> Option<QueryRowResult<T>> { 
-          let row_result = connection
+          let sql_result = connection
                .query(&query, ())
-               .await
-               .unwrap()
-               .next()
                .await;
+          
+          if let Ok(sql_rows) = sql_result {
+               let row_result = sql_rows
+                    .next()
+                    .await;
 
-          if let Ok(row_option) = row_result {
-               if let Some(row) = row_option {
-                    return Some(QueryRowResult::<T> {
-                         value: None,
-                         row: Arc::new(row)
-                    });
+               if let Ok(row_option) = row_result {
+                    if let Some(row) = row_option {
+                         return Some(QueryRowResult::<T> {
+                              value: None,
+                              row: Arc::new(row)
+                         });
+                    }
+                    else {
+                         return None;
+                    }
                }
                else {
                     return None;
                }
           }
           else {
-               return None;
+               return None
           }
      }
 }
@@ -226,17 +232,24 @@ pub(crate) struct QueryRowsResult<T> {
 impl<T> QueryRowsResult<T> {
      pub(crate) async fn new_many(
           query: String, 
-          connection: PooledConnection<AioDatabaseConnection>) -> Option<QueryRowsResult<T>> { 
-          let rows = connection
+          connection: PooledConnection<AioDatabaseConnection>) -> Option<QueryRowsResult<T>> {
+          let sql_result = connection
                .query(&query, ())
-               .await
-               .unwrap();
-          
-          if rows.column_count() > 0 {
-               return Some(QueryRowsResult::<T> {
-                    value: None,
-                    rows: Arc::new(RwLock::new(rows))
-               });
+               .await;
+
+          if let Ok(sql_rows) = sql_result {
+               let row_result = sql_rows
+                    .next()
+                    .await;
+               if rows.column_count() > 0 {
+                    return Some(QueryRowsResult::<T> {
+                         value: None,
+                         rows: Arc::new(RwLock::new(rows))
+                    });
+               }
+               else {
+                    return None
+               }
           }
           else {
                return None

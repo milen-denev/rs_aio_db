@@ -185,7 +185,7 @@ pub(crate) fn generate_where_query<'a, T:  Default + Struct + Clone>(query_build
      return query;
 }
 
-pub(crate) async fn update_value<T:  Default + Struct + Clone>(
+pub(crate) async fn update_value<T:  Default + Struct + Clone> (
      value: &T, 
      table_name: &str, 
      where_query: &str, 
@@ -242,7 +242,7 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone>(
      return rows_affected;
 }
 
-pub(crate) async fn partial_update<T:  Default + Struct + Clone>(
+pub(crate) async fn partial_update<T:  Default + Struct + Clone> (
      field_name: String,
      field_value: String,
      table_name: &str, 
@@ -270,7 +270,7 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone>(
      return rows_affected;
 }
 
-pub(crate) async fn delete_value<T:  Default + Struct + Clone>(
+pub(crate) async fn delete_value<T:  Default + Struct + Clone> (
      table_name: &str, 
      where_query: &str, 
      connection: PooledConnection<AioDatabaseConnection>) -> u64 {
@@ -288,7 +288,7 @@ pub(crate) async fn delete_value<T:  Default + Struct + Clone>(
      return rows_affected;
 }
 
-pub(crate) async fn any_count_query<T:  Default + Struct + Clone>(
+pub(crate) async fn any_count_query<T:  Default + Struct + Clone> (
      table_name: &str, 
      where_query: &str) -> String {
      let mut query = format!("SELECT COUNT(*) AS count_total FROM {} ", table_name);
