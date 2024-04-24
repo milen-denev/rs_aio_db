@@ -42,7 +42,7 @@ async fn main() {
             })
         };
 
-        file_db.insert_value(&person).await;
+        _ = file_db.insert_value(&person).await.unwrap();
     }
 
     println!("Time elapsed for inserting {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
@@ -67,12 +67,13 @@ async fn main() {
             })
         };
 
-        file_db
+        _ = file_db
             .query()
             .field("id")
             .where_is(Operator::Eq(i.to_string()), None)
             .update_value(person)
-            .await;
+            .await
+            .unwrap();
     }
 
     println!("Time elapsed for updating {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());

@@ -101,7 +101,8 @@ use super::models::Schema;
 pub struct AioDatabase {
      name: String,
      conn: Pool<AioDatabaseConnection>,
-     schema: Box<Vec<Schema>>
+     schema: Box<Vec<Schema>>,
+     retries: u32
 }
 
 pub(crate) struct AioDatabaseConnection {
@@ -174,7 +175,8 @@ impl AioDatabase {
           let db = AioDatabase {
                name: name,
                conn: conn_pool,
-               schema: generic_schema
+               schema: generic_schema,
+               retries: 5
           };
 
           return db;
@@ -222,7 +224,8 @@ impl AioDatabase {
           let db = AioDatabase {
                name: name,
                conn: conn_pool,
-               schema: generic_schema
+               schema: generic_schema,
+               retries: 5
           };
 
           return db;
@@ -269,10 +272,16 @@ impl AioDatabase {
           let db = AioDatabase {
                name: name,
                conn: conn_pool,
-               schema: generic_schema
+               schema: generic_schema,
+               retries: 5
           };
 
           return db;
+     }
+
+     //Sets how many retries should be made if a query fails. The delay between retries is 10ms.
+     pub fn set_query_retries(&mut self, retries: u32) {
+          self.retries = retries;
      }
 
      /// Get the name of the database and table's name as well.
@@ -285,10 +294,18 @@ impl AioDatabase {
           return &self.schema;
      }
 
-     /// Inserts a **T** value in the database. 
-     pub async fn insert_value<'a, T:  Default + Struct + Clone>(&self, value: &T) {
+     /// Inserts a **T** value in the database. Returns if the insertion was successful or not after certain retries.
+     pub async fn insert_value<'a, T:  Default + Struct + Clone>(&self, value: &T) -> Result<(), String> {
           let conn = self.conn.clone().get().unwrap();
-          insert_value::<T>(&value, self.get_name(), conn).await;
+          let result = insert_value::<T>(&value, self.get_name(), conn, self.retries).await;
+          if let Ok(result) = result {
+               return Ok(result);
+          }
+          else {
+               return Err(
+                    format!("Insert query retried {} times, but still failed. Increase retry count or lower the concurrent writes to database.", self.retries)
+               );
+          }
      }
 
      /// Creates a QueryBuilder that allows to chain query filters for different field / columns.
@@ -324,19 +341,43 @@ impl AioDatabase {
           }
      }
 
-     pub(crate) async fn update_value<'a, T: Default + Struct + Clone>(&self, value: T, where_query: String) -> u64 {
+     pub(crate) async fn update_value<'a, T: Default + Struct + Clone>(&self, value: T, where_query: String) -> Result<u64, String> {
           let conn = self.conn.clone().get().unwrap();
-          return update_value::<T>(&value, self.get_name(), &where_query, conn).await;
+          let result = update_value::<T>(&value, self.get_name(), &where_query, conn, self.retries).await;
+          if let Ok(result) = result {
+               return Ok(result);
+          }
+          else {
+               return Err(
+                    format!("Update query retried {} times, but still failed. Increase retry count or lower the concurrent writes to database.", self.retries)
+               );
+          }
      }
 
-     pub(crate) async fn partial_update<'a, T: Default + Struct + Clone>(&self, field_name: String, field_value: String, where_query: String) -> u64 {
+     pub(crate) async fn partial_update<'a, T: Default + Struct + Clone>(&self, field_name: String, field_value: String, where_query: String) ->  Result<u64, String> {
           let conn = self.conn.clone().get().unwrap();
-          return partial_update::<T>(field_name, field_value, self.get_name(), &where_query, conn).await;
+          let result = partial_update::<T>(field_name, field_value, self.get_name(), &where_query, conn, self.retries).await;
+          if let Ok(result) = result {
+               return Ok(result);
+          }
+          else {
+               return Err(
+                    format!("Partial update query retried {} times, but still failed. Increase retry count or lower the concurrent writes to database.", self.retries)
+               );
+          }
      }
 
-     pub(crate) async fn delete_value<'a, T: Default + Struct + Clone>(&self, where_query: String) -> u64 {
+     pub(crate) async fn delete_value<'a, T: Default + Struct + Clone>(&self, where_query: String) -> Result<u64, String> {
           let conn = self.conn.clone().get().unwrap();
-          return delete_value::<T>(self.get_name(), &where_query, conn).await;
+          let result = delete_value::<T>(self.get_name(), &where_query, conn, self.retries).await;
+          if let Ok(result) = result {
+               return Ok(result);
+          }
+          else {
+               return Err(
+                    format!("Delete query retried {} times, but still failed. Increase retry count or lower the concurrent writes to database.", self.retries)
+               );
+          }
      }
 
      pub(crate) async fn any<'a, T: Default + Struct + Clone>(&self, where_query: String) -> bool {

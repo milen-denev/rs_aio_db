@@ -58,7 +58,7 @@ fn insert_value() {
                married: false,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into(),
+               comments: "It's very cold up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -66,7 +66,7 @@ fn insert_value() {
                })
           };
 
-          file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person).await;
 
           let result = fs::File::open("G:\\insert_value.db");
 
@@ -95,7 +95,7 @@ fn update_value() {
                married: false,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into(),
+               comments: "It's very cold up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -103,14 +103,15 @@ fn update_value() {
                })
           };
 
-          file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person).await;
 
           let rows = file_db
                .query()
                .field("id")
                .where_is(Operator::Eq((0).to_string()), None)
                .update_value(person)
-               .await;
+               .await
+               .unwrap();
 
           assert_eq!(rows, 1);
     });
@@ -135,7 +136,7 @@ fn retrieve_single_value() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into(),
+               comments: "It's very cold up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -143,7 +144,7 @@ fn retrieve_single_value() {
                })
           };
 
-          file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person).await;
 
           let retrieved_person = file_db
                .query()
@@ -155,7 +156,7 @@ fn retrieve_single_value() {
 
           assert_eq!(retrieved_person.id, 0);
           assert_eq!(retrieved_person.first_name, "Mylo");
-          assert_eq!(retrieved_person.comments, "It^s very cold up there. Send help!");
+          assert_eq!(retrieved_person.comments, "It's very cold up there. Send help!");
           assert_eq!(retrieved_person.married, true);
           assert_eq!(retrieved_person.height, 2.10);
           assert_eq!(retrieved_person.age, 50);
@@ -182,7 +183,7 @@ fn retrieve_all_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into(),
+               comments: "It's very cold up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -199,7 +200,7 @@ fn retrieve_all_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into(),
+               comments: "It's very cold up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -207,10 +208,10 @@ fn retrieve_all_values() {
                })
           };
 
-          file_db.insert_value(&person).await;
-          file_db.insert_value(&person2).await;
-          file_db.insert_value(&person).await;
-          file_db.insert_value(&person2).await;
+          _ = file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person2).await;
+          _ = file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person2).await;
 
           let retrieved_persons: Vec<Person> = file_db
                .query()
@@ -222,7 +223,7 @@ fn retrieve_all_values() {
 
           assert_eq!(retrieved_persons[0].id, 0);
           assert_eq!(retrieved_persons[0].first_name, "Mylo");
-          assert_eq!(retrieved_persons[0].comments, "It^s very cold up there. Send help!");
+          assert_eq!(retrieved_persons[0].comments, "It's very cold up there. Send help!");
           assert_eq!(retrieved_persons[0].married, true);
           assert_eq!(retrieved_persons[0].height, 2.10);
           assert_eq!(retrieved_persons[0].age, 50);
@@ -254,7 +255,7 @@ fn delete_all_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into(),
+               comments: "It's very cold up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -271,7 +272,7 @@ fn delete_all_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very cold up there. Send help!".into(),
+               comments: "It's very cold up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -279,17 +280,18 @@ fn delete_all_values() {
                })
           };
 
-          file_db.insert_value(&person).await;
-          file_db.insert_value(&person2).await;
-          file_db.insert_value(&person).await;
-          file_db.insert_value(&person2).await;
+          _ = file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person2).await;
+          _ = file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person2).await;
 
           let deleted_persons: u64 = file_db
                .query()
                .field("married")
                .where_is(Operator::Eq((true).to_string()), None)
                .delete_value::<Person>()
-               .await;
+               .await
+               .unwrap();
 
           assert_eq!(deleted_persons, 4);  
     });
@@ -315,7 +317,7 @@ fn contains_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very hot up there. Send help!".into(),
+               comments: "It's very hot up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -332,7 +334,7 @@ fn contains_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very warm up there. Send help!".into(),
+               comments: "It's very warm up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -349,7 +351,7 @@ fn contains_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very CoLd up there. Send help!".into(),
+               comments: "It's very CoLd up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -357,9 +359,9 @@ fn contains_values() {
                })
           };
 
-          file_db.insert_value(&person).await;
-          file_db.insert_value(&person2).await;
-          file_db.insert_value(&person3).await;
+          _ = file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person2).await;
+          _ = file_db.insert_value(&person3).await;
 
           let retrieved_person = file_db
                .query()
@@ -393,7 +395,7 @@ fn starts_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very hot up there. Send help!".into(),
+               comments: "It's very hot up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -410,7 +412,7 @@ fn starts_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very warm up there. It^^s Send help!".into(),
+               comments: "It's very warm up there. Its Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -427,7 +429,7 @@ fn starts_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^^s very CoLd up there. Send help!".into(),
+               comments: "Its very CoLd up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -435,14 +437,14 @@ fn starts_with_values() {
                })
           };
 
-          file_db.insert_value(&person).await;
-          file_db.insert_value(&person2).await;
-          file_db.insert_value(&person3).await;
+          _ = file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person2).await;
+          _ = file_db.insert_value(&person3).await;
 
           let retrieved_person = file_db
                .query()
                .field("comments")
-               .where_is(Operator::StartsWith(("It^^s").to_string()), None)
+               .where_is(Operator::StartsWith(("Its").to_string()), None)
                .get_single_value::<Person>()
                .await
                .unwrap();
@@ -471,7 +473,7 @@ fn ends_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very hot up there. Send help!".into(),
+               comments: "It's very hot up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -488,7 +490,7 @@ fn ends_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very warm up there HelP!!. Send help!".into(),
+               comments: "It's very warm up there HelP!!. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -505,7 +507,7 @@ fn ends_with_values() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^^s very CoLd up there. Send HelP!!".into(),
+               comments: "Its very CoLd up there. Send HelP!!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -513,9 +515,9 @@ fn ends_with_values() {
                })
           };
 
-          file_db.insert_value(&person).await;
-          file_db.insert_value(&person2).await;
-          file_db.insert_value(&person3).await;
+          _ = file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person2).await;
+          _ = file_db.insert_value(&person3).await;
 
           let retrieved_person = file_db
                .query()
@@ -549,7 +551,7 @@ fn any() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very hot up there. Send help!".into(),
+               comments: "It's very hot up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -566,7 +568,7 @@ fn any() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very warm up there. It^^s Send help!".into(),
+               comments: "It's very warm up there. Its Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -583,7 +585,7 @@ fn any() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^^s very CoLd up there. Send help!".into(),
+               comments: "Its very CoLd up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -591,14 +593,14 @@ fn any() {
                })
           };
 
-          file_db.insert_value(&person).await;
-          file_db.insert_value(&person2).await;
-          file_db.insert_value(&person3).await;
+          _ = file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person2).await;
+          _ = file_db.insert_value(&person3).await;
 
           let any = file_db
                .query()
                .field("comments")
-               .where_is(Operator::Contains(("It^^s").to_string()), None)
+               .where_is(Operator::Contains(("Its").to_string()), None)
                .any::<Person>()
                .await;
 
@@ -626,7 +628,7 @@ fn all() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very hot up there. Send help!".into(),
+               comments: "It's very hot up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -643,7 +645,7 @@ fn all() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very warm up there. It^^s Send help!".into(),
+               comments: "It's very warm up there. Its Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -660,7 +662,7 @@ fn all() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^^s very CoLd up there. Send help!".into(),
+               comments: "Its very CoLd up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -668,9 +670,9 @@ fn all() {
                })
           };
 
-          file_db.insert_value(&person).await;
-          file_db.insert_value(&person2).await;
-          file_db.insert_value(&person3).await;
+          _ = file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person2).await;
+          _ = file_db.insert_value(&person3).await;
 
           let all = file_db
                .query()
@@ -703,7 +705,7 @@ fn count() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very hot up there. Send help!".into(),
+               comments: "It's very hot up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -720,7 +722,7 @@ fn count() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^s very warm up there. It^^s Send help!".into(),
+               comments: "It's very warm up there. Its Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -737,7 +739,7 @@ fn count() {
                married: true,
                address: "North Pole, Ice Street 0, NP0001".into(),
                date_of_birth: 1000000,
-               comments: "It^^s very CoLd up there. Send help!".into(),
+               comments: "Its very CoLd up there. Send help!".into(),
                some_blob: AioDatabase::get_bytes(AnotherStruct {
                    data_1: 5,
                    data_2: 10.4,
@@ -745,9 +747,9 @@ fn count() {
                })
           };
 
-          file_db.insert_value(&person).await;
-          file_db.insert_value(&person2).await;
-          file_db.insert_value(&person3).await;
+          _ = file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person2).await;
+          _ = file_db.insert_value(&person3).await;
 
           let count = file_db
                .query()

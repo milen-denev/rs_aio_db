@@ -104,22 +104,22 @@ impl QueryBuilder<'_> {
           return db.get_many_values::<T>(query).await;
      }
 
-     /// Updates **all values** that matches the query filter with values of the struct of type **T**. Returns the number of rows affected.
-     pub async fn update_value<'a, T: Default + Struct + Clone>(self, value: T)  -> u64 {
+     /// Updates **all values** that matches the query filter with values of the struct of type **T**. Returns a Result of the number of rows affected or error if update was unsuccessful.
+     pub async fn update_value<'a, T: Default + Struct + Clone>(self, value: T)  -> Result<u64, String> {
           let db = self.db;
           let where_query = generate_where_query::<T>(&self);
           return db.update_value::<T>(value, where_query).await;
      }
 
-     /// Updates specific field / column that matches the query filter. Returns the number of rows affected.
-     pub async fn partial_update<'a, T: Default + Struct + Clone>(self, field_name: String, field_value: String)  -> u64 {
+     /// Updates specific field / column that matches the query filter. Returns a Result of the number of rows affected or error if update was unsuccessful.
+     pub async fn partial_update<'a, T: Default + Struct + Clone>(self, field_name: String, field_value: String)  -> Result<u64, String> {
           let db = self.db;
           let where_query = generate_where_query::<T>(&self);
           return db.partial_update::<T>(field_name, field_value, where_query).await;
      }
 
-     /// Deletes **all values** that match the query filter. Returns the number of rows affected.
-     pub async fn delete_value<'a, T: Default + Struct + Clone>(self) -> u64 {
+     /// Deletes **all values** that match the query filter. Returns a Result of the number of rows affected or error if update was unsuccessful.
+     pub async fn delete_value<'a, T: Default + Struct + Clone>(self) -> Result<u64, String> {
           let db = self.db;
           let where_query = generate_where_query::<T>(&self);
           return db.delete_value::<T>(where_query).await;

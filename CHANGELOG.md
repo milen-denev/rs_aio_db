@@ -1,5 +1,12 @@
 # Aio Database Release Notes
 
+### v0.6.0
+- Official Release
+- Added retries in queries that might lock the database. **insert_value** **update_value** **partial_update**, **delete_value** now returns Result type. 
+- Added **set_query_retries** to the AioDatabase struct which sets how many retries should be made.
+- Improved reliability
+- Fixed string escaping
+
 ### v0.5.10
 - Improved reliability
 - Update dependencies

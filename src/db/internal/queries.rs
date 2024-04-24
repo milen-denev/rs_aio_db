@@ -1,12 +1,14 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use bevy_reflect::Struct;
 use hex::encode;
 use libsql::Connection;
-use log::debug;
+use log::{debug, info};
 use r2d2::PooledConnection;
 use crate::db::{aio_database::AioDatabaseConnection, aio_query::{QueryBuilder, QueryRowResult, QueryRowsResult}, internal::helpers::{get_values_from_generic, query_match_operators}, models::Schema};
 use super::{helpers::set_values_from_row_result, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
+
+static SLEEP_DURATION: Duration = Duration::from_millis(10); //Retry every 10ms
 
 pub(crate) async fn create_table(schema_vec: &Vec<Schema>, name: &str, connection: &Connection) {
      let create_table_script = generate_db_schema_query(schema_vec, name);
@@ -78,7 +80,13 @@ pub(crate) async fn alter_table_drop_column(name: &str, column_name: &str, conne
           .unwrap();
 }
 
-pub(crate) async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_name: &str, connection: PooledConnection<AioDatabaseConnection>) {
+pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
+     value: &T, 
+     table_name: &str, 
+     connection: PooledConnection<AioDatabaseConnection>, 
+     time_to_retry: u32) -> 
+     Result<(), ()>
+{
      let generic_values = get_values_from_generic::<T>(value);
      let mut query = format!("INSERT INTO {} (", table_name);
 
@@ -101,7 +109,20 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_
                query.push(',');
           }
           else {
-               query.push_str(format!("{:?}", generic_value.field_value).as_str());
+               let mut string_value = format!("{:?}", generic_value.field_value);
+
+               if generic_value.field_type == "String" {
+                    string_value.pop();
+                    string_value.remove(0);
+
+                    if string_value.contains("'") {
+                         string_value = string_value.replace("'", "''");
+                    }
+
+                    string_value = format!("'{}'", string_value);
+               }
+
+               query.push_str(string_value.as_str());
                query.push(',');
           }
      }
@@ -115,17 +136,35 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(value: &T, table_
           query.push(')');
      }
      else {
-          query.push_str(format!("{:?}", last.field_value).as_str());
+          let mut string_value = format!("{:?}", last.field_value);
+
+          if string_value.contains("'") {
+               string_value = string_value.replace("'", "''");
+          }
+
+          query.push_str(string_value.as_str());
           query.push(')');
      }
 
      debug!("Executing insert query: {}", query);
 
-     connection.execute(&query, ())
-          .await
-          .unwrap();
+     let mut retries = 0;
 
-     drop(connection);
+     while retries < time_to_retry {
+         let function_result = connection.execute(&query, ()).await;
+ 
+         if function_result.is_ok() {
+             return Ok(());
+         }
+         else {
+             let error = function_result.unwrap_err();
+             info!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
+             retries = retries + 1;
+         }
+         tokio::time::sleep(SLEEP_DURATION).await;
+     }
+ 
+     return Err(());
 }
 
 pub(crate) fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder: &'a QueryBuilder<'_>) -> String {    
@@ -189,7 +228,9 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
      value: &T, 
      table_name: &str, 
      where_query: &str, 
-     connection: PooledConnection<AioDatabaseConnection>) -> u64 {
+     connection: PooledConnection<AioDatabaseConnection>,
+     time_to_retry: u32) -> 
+     Result<u64, ()> {
      let generic_values = get_values_from_generic::<T>(value);
      let mut query = format!("UPDATE {} SET ", table_name);
 
@@ -205,7 +246,14 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
                query.push_str(", ");
           }
           else {
-               let set_query = format!("{} = {:?}", name, value).replace("\"", "'");
+               let mut string_value = format!("{:?}", value);
+
+               if string_value.contains("'") {
+                    string_value = string_value.replace("'", "''");
+               }
+
+               let set_query = format!("{} = {}", name, string_value).replace("\"", "'");
+
                query.push_str(set_query.as_str());
                query.push_str(", ");
           }
@@ -224,7 +272,13 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
           query.push(' ');
      }
      else {
-          let set_query = format!("{} = {:?}", name, value).replace("\"", "'");
+          let mut string_value = format!("{:?}", value);
+               
+          if string_value.contains("'") {
+               string_value = string_value.replace("'", "''");
+          }
+
+          let set_query = format!("{} = {:?}", name, string_value).replace("\"", "'");
           query.push_str(set_query.as_str());
           query.push(' ');     
      }
@@ -233,13 +287,23 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
 
      debug!("Executing update query: {}", query);
 
-     let rows_affected = connection.execute(&query, ())
-          .await
-          .unwrap();
+     let mut retries = 0;
 
-     drop(connection);
-
-     return rows_affected;
+     while retries < time_to_retry {
+         let function_result = connection.execute(&query, ()).await;
+ 
+         if function_result.is_ok() {
+             return Ok(function_result.unwrap());
+         }
+         else {
+             let error = function_result.unwrap_err();
+             info!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
+             retries = retries + 1;
+         }
+         tokio::time::sleep(SLEEP_DURATION).await;
+     }
+ 
+     return Err(());
 }
 
 pub(crate) async fn partial_update<T:  Default + Struct + Clone> (
@@ -247,45 +311,76 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone> (
      field_value: String,
      table_name: &str, 
      where_query: &str, 
-     connection: PooledConnection<AioDatabaseConnection>) -> u64 {
+     connection: PooledConnection<AioDatabaseConnection>,
+     time_to_retry: u32) -> 
+     Result<u64, ()> {
      
      let mut query = format!("UPDATE {} SET ", table_name);
 
      let name = field_name;
      let value = field_value;
-     let set_query = format!("{} = {}", name, value).replace("\"", "'");
+
+     let mut string_value = format!("{:?}", value);
+               
+     if string_value.contains("'") {
+          string_value = string_value.replace("'", "''");
+     }
+
+     let set_query = format!("{} = {}", name, string_value).replace("\"", "'");
      query.push_str(set_query.as_str());
      query.push(' ');
 
      query.push_str(where_query);
 
      debug!("Executing partial update query: {}", query);
+     
+     let mut retries = 0;
 
-     let rows_affected = connection.execute(&query, ())
-          .await
-          .unwrap();
-
-     drop(connection);
-
-     return rows_affected;
+     while retries < time_to_retry {
+         let function_result = connection.execute(&query, ()).await;
+ 
+         if function_result.is_ok() {
+             return Ok(function_result.unwrap());
+         }
+         else {
+             let error = function_result.unwrap_err();
+             info!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
+             retries = retries + 1;
+         }
+         tokio::time::sleep(SLEEP_DURATION).await;
+     }
+ 
+     return Err(());
 }
 
 pub(crate) async fn delete_value<T:  Default + Struct + Clone> (
      table_name: &str, 
      where_query: &str, 
-     connection: PooledConnection<AioDatabaseConnection>) -> u64 {
+     connection: PooledConnection<AioDatabaseConnection>,
+     time_to_retry: u32) ->
+     Result<u64, ()> {
      let mut query = format!("DELETE FROM {} ", table_name);
      query.push_str(where_query);
 
      debug!("Executing delete query: {}", query);
 
-     let rows_affected = connection.execute(&query, ())
-          .await
-          .unwrap();
+     let mut retries = 0;
 
-     drop(connection);
-
-     return rows_affected;
+     while retries < time_to_retry {
+         let function_result = connection.execute(&query, ()).await;
+ 
+         if function_result.is_ok() {
+             return Ok(function_result.unwrap());
+         }
+         else {
+             let error = function_result.unwrap_err();
+             info!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
+             retries = retries + 1;
+         }
+         tokio::time::sleep(SLEEP_DURATION).await;
+     }
+ 
+     return Err(());
 }
 
 pub(crate) async fn any_count_query<T:  Default + Struct + Clone> (

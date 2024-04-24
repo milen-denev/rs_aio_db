@@ -149,13 +149,16 @@ pub(crate) fn get_next(next: &Next) -> String {
      }
 }
 
-pub(crate) fn get_end_value(value: &str, field_type: &str) -> String{
+pub(crate) fn get_end_value(value: &str, field_type: &str) -> String {
+     let value = value.to_string();
+
      let end_value: String;
+
      if field_type == "String" {
           end_value = format!("'{}'", value);
      }
      else {
-         end_value = value.to_string();
+         end_value = value;
      }
 
      return end_value;
@@ -184,7 +187,9 @@ pub(crate) fn push_contains_to_query_string(
      end_value: &str, 
      last_item: bool, 
      next: Option<&Next>) {
-     let like_end_value = format!("'%{}%'", end_value.replace("'", ""));
+     let end_value = end_value.to_string();
+
+     let like_end_value = format!("'%{}%'", end_value.replace("'", "''"));
 
      if !last_item {
           let next = next.unwrap();
@@ -202,7 +207,9 @@ pub(crate) fn push_starts_with_to_query_string(
      end_value: &str, 
      last_item: bool, 
      next: Option<&Next>) {
-     let like_end_value = format!("'{}%'", end_value.replace("'", ""));
+     let end_value = end_value.to_string();
+
+     let like_end_value = format!("'{}%'", end_value.replace("'", "''"));
 
      if !last_item {
           let next = next.unwrap();
@@ -220,7 +227,9 @@ pub(crate) fn push_ends_with_to_query_string(
      end_value: &str, 
      last_item: bool, 
      next: Option<&Next>) {
-     let like_end_value = format!("'%{}'", end_value.replace("'", ""));
+     let end_value = end_value.to_string();
+
+     let like_end_value = format!("'%{}'", end_value.replace("'", "''"));
 
      if !last_item {
           let next = next.unwrap();
@@ -307,31 +316,28 @@ pub(crate) fn query_match_operators(
                );
           },
           Operator::Contains(value) => {
-               let end_value = get_end_value(&value, field_type);
                push_contains_to_query_string(
                     query_string, 
                     field_name,
-                    &end_value,
+                    &value,
                     last_item,
                     next
                );
           },
           Operator::StartsWith(value) => {
-               let end_value = get_end_value(&value, field_type);
                push_starts_with_to_query_string(
                     query_string, 
                     field_name,
-                    &end_value,
+                    &value,
                     last_item,
                     next
                );
           },
           Operator::EndsWith(value) => {
-               let end_value = get_end_value(&value, field_type);
                push_ends_with_to_query_string(
                     query_string, 
                     field_name,
-                    &end_value,
+                    &value,
                     last_item,
                     next
                );

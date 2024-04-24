@@ -28,7 +28,7 @@ async fn main() {
     let mut hash_map = HashMap::new();
     hash_map.insert("Key1".into(), "Value1".into());
     
-    file_db.insert_value(&Person {
+    _ = file_db.insert_value(&Person {
         name: "Mylo".into(),
         age: 0,
         height: 0,
@@ -38,7 +38,7 @@ async fn main() {
             data_2: 10.4,
             data_3:  hash_map.clone()
         })
-    }).await;
+    }).await.unwrap();
 
     let get_record = file_db
         .query()
@@ -76,7 +76,7 @@ async fn main() {
 
     println!("Updated rows: {:?}", partial_update_rows);
 
-    file_db.insert_value(&Person {
+    _ = file_db.insert_value(&Person {
         name: "Mylo 300".into(),
         age: 0,
         height: 0,
@@ -86,7 +86,7 @@ async fn main() {
             data_2: 10.4,
             data_3:  hash_map.clone()
         })
-    }).await;
+    }).await.unwrap();
 
     let delete_rows = file_db
         .query()
