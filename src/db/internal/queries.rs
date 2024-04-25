@@ -25,12 +25,12 @@ pub(crate) async fn change_db_settings(connection: &Connection) {
      _ = connection.execute("PRAGMA journal_size_limit=-1;", ())
           .await;
 
-     _ = connection.execute("PRAGMA auto_vacuum=2;", ())
+     _ = connection.execute("PRAGMA auto_vacuum=FULL;", ())
           .await;
 }
 
 pub(crate) async fn get_current_db_schema(name: &str, connection: &Connection) -> Option<Vec<Schema>> {  
-     let query = format!("SELECT sql FROM sqlite_schema WHERE name = {}", name);
+     let query = format!("SELECT sql FROM sqlite_schema WHERE name = '{}'", name);
 
      let result_query = connection
           .query(&query, ())
