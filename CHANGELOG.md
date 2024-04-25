@@ -1,5 +1,8 @@
 # Aio Database Release Notes
 
+### v0.6.1
+- Fixed an issue with the query used for auto-migration
+
 ### v0.6.0
 - Official Release
 - Added retries in queries that might lock the database. **insert_value** **update_value** **partial_update**, **delete_value** now returns Result type. 
