@@ -95,10 +95,7 @@ pub(crate) fn set_values_from_row_result<'a, T:  Default + Struct + Clone>(row_r
                     *t_struct.get_field_mut::<u32>(field_name).unwrap() = row_result.row.get::<u32>(i as i32).unwrap_or(0) as u32;
                },
                "u64" => {
-                    *t_struct.get_field_mut::<u64>(field_name).unwrap() = row_result.row.get::<u32>(i as i32).unwrap_or(0) as u64;
-               },
-               "u128" => {
-                    *t_struct.get_field_mut::<u128>(field_name).unwrap() = row_result.row.get::<u32>(i as i32).unwrap_or(0) as u128;
+                    *t_struct.get_field_mut::<u64>(field_name).unwrap() = row_result.row.get::<u64>(i as i32).unwrap_or(0) as u64;
                },
                "i8" => {
                     *t_struct.get_field_mut::<i8>(field_name).unwrap() = row_result.row.get::<i32>(i as i32).unwrap_or(0) as i8;
@@ -110,10 +107,7 @@ pub(crate) fn set_values_from_row_result<'a, T:  Default + Struct + Clone>(row_r
                     *t_struct.get_field_mut::<i32>(field_name).unwrap() = row_result.row.get::<i32>(i as i32).unwrap_or(0) as i32;
                },
                "i64" => {
-                    *t_struct.get_field_mut::<i64>(field_name).unwrap() = row_result.row.get::<i32>(i as i32).unwrap_or(0) as i64;
-               },
-               "i128" => {
-                    *t_struct.get_field_mut::<i128>(field_name).unwrap() = row_result.row.get::<i32>(i as i32).unwrap_or(0) as i128;
+                    *t_struct.get_field_mut::<i64>(field_name).unwrap() = row_result.row.get::<i64>(i as i32).unwrap_or(0) as i64;
                },
                "f32" => {
                     *t_struct.get_field_mut::<f32>(field_name).unwrap() = row_result.row.get::<f64>(i as i32).unwrap_or(0.00f64) as f32;

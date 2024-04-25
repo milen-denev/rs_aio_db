@@ -11,6 +11,7 @@
 - Highly Concurrent due to the internal connection pooling
 - ORM-like API that is dead simple to use
 - Use anywhere
+- Support for `bool`, `u8`, `u16`, `u32`, `u64`, `i8`, `i16`, `i32`, `i64`, `char`, `String` and `Vec<u8>` Rust types
 
 ## Production Readiness 
 
