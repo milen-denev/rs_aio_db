@@ -79,11 +79,7 @@ pub(crate) fn set_values_from_row_result<'a, T:  Default + Struct + Clone>(row_r
 
           match field_type {
                "bool" => {
-                    *t_struct.get_field_mut::<bool>(field_name).unwrap() = match row_result.row.get::<i32>(i as i32).unwrap_or(0) {
-                         0 => { false }
-                         1 => { true },
-                         _ => panic!("Invalid bool value")
-                    };
+                    *t_struct.get_field_mut::<bool>(field_name).unwrap() = row_result.row.get::<bool>(i as i32).unwrap_or(false);
                },
                "u8" => {
                     *t_struct.get_field_mut::<u8>(field_name).unwrap() = row_result.row.get::<u32>(i as i32).unwrap_or(0) as u8;

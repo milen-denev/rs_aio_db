@@ -1,5 +1,8 @@
 # Aio Database Release Notes
 
+### v0.6.5
+- Additional fixes for sqlite and libsql mapping to rust types
+
 ### v0.6.4
 - Extend fixes for sqlite and libsql mapping to rust types
 - Dropped unsupported types (u128 and i128)
