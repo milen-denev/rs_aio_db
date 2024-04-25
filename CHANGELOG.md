@@ -1,5 +1,8 @@
 # Aio Database Release Notes
 
+### v0.6.2
+- Fixed an issue where Sqlite's NULL values causes panic because Default values are missing then doing mapping
+
 ### v0.6.1
 - Fixed an issue with the query used for auto-migration
 
