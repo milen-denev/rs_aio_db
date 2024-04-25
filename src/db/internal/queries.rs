@@ -98,7 +98,6 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
      query.push_str(generic_values.iter().last().unwrap().field_name.as_str());
      query.push(')');
 
-
      query.push_str(" VALUES (");
 
      for generic_value in generic_values.iter().take(generic_values.len() - 1) {
