@@ -121,6 +121,15 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
                     string_value = format!("'{}'", string_value);
                }
 
+               if generic_value.field_type == "bool" {
+                    if string_value.contains("false") {
+                         _ = string_value = 0.to_string();
+                    }
+                    else {
+                         _ = string_value = 1.to_string();
+                    }  
+               }
+
                query.push_str(string_value.as_str());
                query.push(',');
           }
@@ -137,8 +146,24 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
      else {
           let mut string_value = format!("{:?}", last.field_value);
 
-          if string_value.contains("'") {
-               string_value = string_value.replace("'", "''");
+          if last.field_type == "String" {
+               string_value.pop();
+               string_value.remove(0);
+
+               if string_value.contains("'") {
+                    string_value = string_value.replace("'", "''");
+               }
+
+               string_value = format!("'{}'", string_value);
+          }
+
+          if last.field_type == "bool" {
+               if string_value.contains("false") {
+                    _ = string_value = 0.to_string();
+               }
+               else {
+                    _ = string_value = 1.to_string();
+               }  
           }
 
           query.push_str(string_value.as_str());
@@ -251,6 +276,15 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
                     string_value = string_value.replace("'", "''");
                }
 
+               if generic_value.field_type == "bool" {
+                    if string_value.contains("false") {
+                         _ = string_value = 0.to_string();
+                    }
+                    else {
+                         _ = string_value = 1.to_string();
+                    }  
+               }
+
                let set_query = format!("{} = {}", name, string_value).replace("\"", "'");
 
                query.push_str(set_query.as_str());
@@ -275,6 +309,15 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
                
           if string_value.contains("'") {
                string_value = string_value.replace("'", "''");
+          }
+
+          if generic_value.field_type == "bool" {
+               if string_value.contains("false") {
+                    _ = string_value = 0.to_string();
+               }
+               else {
+                    _ = string_value = 1.to_string();
+               }  
           }
 
           let set_query = format!("{} = {:?}", name, string_value).replace("\"", "'");
@@ -324,7 +367,7 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone> (
      if string_value.contains("'") {
           string_value = string_value.replace("'", "''");
      }
-
+     
      let set_query = format!("{} = {}", name, string_value).replace("\"", "'");
      query.push_str(set_query.as_str());
      query.push(' ');
