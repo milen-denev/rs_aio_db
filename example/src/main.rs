@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use rs_aio_db::db::aio_query::{Next, Operator};
@@ -6,7 +7,7 @@ mod model;
 use actix_web::{get, web, App, HttpServer, Responder};
 
 //DON'T PLACE WITHIN THE SAME DIRECTORY MODELS AND ACTIX ENDPOINTS
-use crate::model::Person;
+use crate::model::{Person, AnotherStruct};
 
 #[tokio::main]
 async fn main() {
@@ -23,7 +24,8 @@ async fn main() {
     let remote_db = AioDatabase::create_remote_dont_use_only_for_testing::<Person>(
         "libsql://<SOME_SUBDOMAIN>.turso.io".into(),
         "<SOME_TOKEN>".into(),
-        "<SOME_TABLE_NAME>".into()).await;
+        "<SOME_TABLE_NAME>".into(),
+        15).await;
     
     let mut hash_map = HashMap::new();
     hash_map.insert("Key1".into(), "Value1".into());
@@ -40,15 +42,15 @@ async fn main() {
         })
     }).await.unwrap();
 
-    let get_record = file_db
+    let person = file_db
         .query()
         .field("age")
         .where_is(Operator::Gt(5.to_string()), Some(Next::Or))
         .field("name")
         .where_is(Operator::Eq("Mylo".into()), None)
-        .get_many_values::<Person>().await;
+        .get_single_value::<Person>().await;
 
-    println!("Record result: {:?}", get_record);
+    println!("Record result: {:?}", person);
 
     let update_rows = file_db
         .query()
@@ -77,7 +79,7 @@ async fn main() {
     println!("Updated rows: {:?}", partial_update_rows);
 
     _ = file_db.insert_value(&Person {
-        name: "Mylo 300".into(),
+        name: "Not Mylo".into(),
         age: 0,
         height: 0,
         married: true,
@@ -91,7 +93,7 @@ async fn main() {
     let delete_rows = file_db
         .query()
         .field("name")
-        .where_is(Operator::Eq("Mylo 300".into()), None)
+        .where_is(Operator::Eq("Not Mylo".into()), None)
         .delete_value::<Person>().await;
 
     println!("Deleted rows: {:?}", delete_rows);
@@ -99,7 +101,7 @@ async fn main() {
     let any = file_db
         .query()
         .field("name")
-        .where_is(Operator::Ne("Mylo 300".into()), None)
+        .where_is(Operator::Ne("Not Mylo".into()), None)
         .any::<Person>()
         .await;
 
@@ -108,7 +110,7 @@ async fn main() {
     let count = file_db
         .query()
         .field("name")
-        .where_is(Operator::Ne("Mylo 300".into()), None)
+        .where_is(Operator::Ne("Not Mylo".into()), None)
         .count::<Person>()
         .await;
 
@@ -117,7 +119,7 @@ async fn main() {
     let all = file_db
         .query()
         .field("name")
-        .where_is(Operator::Contains("Mylo 900".into()), None)
+        .where_is(Operator::Contains("Not Mylo".into()), None)
         .all::<Person>()
         .await;
 
