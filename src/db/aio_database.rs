@@ -22,6 +22,7 @@ use super::internal::helpers::get_schema_from_generic;
 use super::internal::queries::all_query;
 use super::internal::queries::any_count_query;
 use super::internal::queries::change_db_settings;
+use super::internal::queries::change_synchronous_settings;
 use super::internal::queries::create_table;
 use super::internal::queries::delete_value;
 use super::internal::queries::get_current_db_schema;
@@ -133,7 +134,7 @@ impl ManageConnection for AioDatabaseConnection {
 }
 
 impl AioDatabase {
-     ///Create a locally persisted database.
+     /// Create a locally persisted database.
      pub async fn create<'a, T>(location: String, name: String, max_pool_size: u32) -> AioDatabase  where T: Default + Struct + Clone  {       
           let db_location = format!("{}{}{}{}", location, get_system_char_delimiter(), name, ".db");
           let builder = Builder::new_local(db_location).build().await.unwrap();
@@ -182,7 +183,7 @@ impl AioDatabase {
           return db;
      }
 
-     ///Create an in-memory database.
+     /// Create an in-memory database.
      pub async fn create_in_memory<'a, T:  Default + Struct + Clone>(name: String, max_pool_size: u32) -> AioDatabase {
           let builder = Builder::new_local(":memory:").build().await.unwrap();
           let aio_conn = AioDatabaseConnection {
@@ -231,7 +232,7 @@ impl AioDatabase {
           return db;
      }
 
-     ///Create remote database.
+     /// Create remote database.
      pub async fn create_remote_dont_use_only_for_testing<'a, T>(url: String, auth_token: String, name: String ,max_pool_size: u32) -> AioDatabase  where T: Default + Struct + Clone  {       
           let builder = Builder::new_remote(url, auth_token).build().await.unwrap();
           let aio_conn = AioDatabaseConnection {
@@ -279,7 +280,7 @@ impl AioDatabase {
           return db;
      }
 
-     //Sets how many retries should be made if a query fails. The delay between retries is 10ms.
+     /// Sets how many retries should be made if a query fails. The delay between retries is 10ms.
      pub fn set_query_retries(&mut self, retries: u32) {
           self.retries = retries;
      }
@@ -292,6 +293,13 @@ impl AioDatabase {
      /// Get the schema of the struct / database.
      pub fn get_schema(&self) -> &Vec<Schema> {
           return &self.schema;
+     }
+
+     /// If set_synchronous(true) then the PRAGMA synchronous will equal to NORMAL (recommended) or false for PRAGMA synchronous to equal to OFF. 
+     /// That way transaction will be allowed to be asynchronous which may increase performance but in case of an accident the DB may be corrupted.
+     pub async fn set_synchronous(&self, val: bool) {
+          let conn = self.conn.clone().get().unwrap();
+          change_synchronous_settings(&conn, val).await;
      }
 
      /// Inserts a **T** value in the database. Returns if the insertion was successful or not after certain retries.

@@ -1,5 +1,9 @@
 # Aio Database Release Notes
 
+### v0.6.7
+- Update dependencies
+- Add API for changing the PRAGMA synchronous settings
+
 ### v0.6.6
 - Reversed boolean changes, now it's save as 0 or 1 in the sqlite databases (in the form of NUMERIC)
 

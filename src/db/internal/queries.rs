@@ -27,6 +27,20 @@ pub(crate) async fn change_db_settings(connection: &Connection) {
 
      _ = connection.execute("PRAGMA auto_vacuum=FULL;", ())
           .await;
+
+     _ = connection.execute("PRAGMA temp_store=MEMORY;", ())
+          .await;
+}
+
+pub(crate) async fn change_synchronous_settings(connection: &Connection, val: bool) {
+     if !val {
+          _ = connection.execute(" PRAGMA synchronous=OFF;", ())
+               .await;
+     }
+     else {
+          _ = connection.execute(" PRAGMA synchronous=NORMAL;", ())
+               .await;
+     }
 }
 
 pub(crate) async fn get_current_db_schema(name: &str, connection: &Connection) -> Option<Vec<Schema>> {  
