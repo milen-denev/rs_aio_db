@@ -9,15 +9,27 @@
             "presentation": {
                 "reveal": "always",
             },
+            "problemMatcher": [],
+			"options": {
+				"shell": {
+					"executable": "powershell.exe"
+				}
+			}
         },
         {
             "label": "run",
             "type": "shell",
-            "command": "pwsh ${workspaceRoot}/target/debug/${workspaceRootFolderName}",
+            "command": "./${workspaceRoot}/target/debug/${workspaceRootFolderName}",
             "args": [],
             "presentation": {
                 "reveal": "always",
             },
+            "problemMatcher": [],
+			"options": {
+				"shell": {
+					"executable": "nu"
+				}
+			}
         }
     ]
 }
