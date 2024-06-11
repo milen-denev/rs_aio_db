@@ -3,7 +3,7 @@ exclude = ["example/*", "benches/*"]
 
 [package]
 name = "rs_aio_db"
-version = "0.6.7"
+version = "0.7.0"
 edition = "2021"
 repository = "https://github.com/milen-denev/rs_aio_db"
 license = "Apache-2.0"
@@ -14,9 +14,9 @@ description = "All in one (aka Aio) database with async support. Based on libsql
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-libsql = "0.3.5"
+libsql = "0.4.0"
 bevy_reflect = "0.13.2"
-tokio = "1.37.0"
+tokio = "1.38.0"
 log = "0.4.21"
 env_logger = "0.11.3"
 stopwatch = "0.0.7"

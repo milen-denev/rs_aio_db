@@ -1,5 +1,8 @@
 # Aio Database Release Notes
 
+### v0.7.0
+- Update dependencies
+
 ### v0.6.7
 - Update dependencies
 - Add API for changing the PRAGMA synchronous settings
