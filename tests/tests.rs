@@ -29,10 +29,10 @@ struct AnotherStruct {
 fn create_db() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\create_db.db");
+          _ = fs::remove_file("C:\\Tests\\create_db.db");
 
-          _ = AioDatabase::create::<Person>("G:\\".into(), "create_db".into(), 15).await;
-          let result = fs::File::open("G:\\create_db.db");
+          _ = AioDatabase::create::<Person>("C:\\Tests\\".into(), "create_db".into(), 15).await;
+          let result = fs::File::open("C:\\Tests\\create_db.db");
 
           assert_eq!(result.is_ok(), true);
     });
@@ -42,9 +42,9 @@ fn create_db() {
 fn insert_value() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\insert_value.db");
+          _ = fs::remove_file("C:\\Tests\\insert_value.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "insert_value".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "insert_value".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -68,7 +68,7 @@ fn insert_value() {
 
           _ = file_db.insert_value(&person).await;
 
-          let result = fs::File::open("G:\\insert_value.db");
+          let result = fs::File::open("C:\\Tests\\insert_value.db");
 
           assert_eq!(result.is_ok(), true);
     });
@@ -78,9 +78,9 @@ fn insert_value() {
 fn update_value() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\update_value.db");
+          _ = fs::remove_file("C:\\Tests\\update_value.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "update_value".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "update_value".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -121,8 +121,8 @@ fn update_value() {
 fn retrieve_single_value() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\retrieve_single_value.db");
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "retrieve_single_value".into(), 15).await;
+          _ = fs::remove_file("C:\\Tests\\retrieve_single_value.db");
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "retrieve_single_value".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -167,9 +167,9 @@ fn retrieve_single_value() {
 fn retrieve_all_values() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\retrieve_all_values.db");
+          _ = fs::remove_file("C:\\Tests\\retrieve_all_values.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "retrieve_all_values".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "retrieve_all_values".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -239,9 +239,9 @@ fn retrieve_all_values() {
 fn delete_all_values() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\delete_all_values.db");
+          _ = fs::remove_file("C:\\Tests\\delete_all_values.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "delete_all_values".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "delete_all_values".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -301,9 +301,9 @@ fn delete_all_values() {
 fn contains_values() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\contains_values.db");
+          _ = fs::remove_file("C:\\Tests\\contains_values.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "contains_values".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "contains_values".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -379,9 +379,9 @@ fn contains_values() {
 fn starts_with_values() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\starts_with_values.db");
+          _ = fs::remove_file("C:\\Tests\\starts_with_values.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "starts_with_values".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "starts_with_values".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -457,9 +457,9 @@ fn starts_with_values() {
 fn ends_with_values() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\ends_with_values.db");
+          _ = fs::remove_file("C:\\Tests\\ends_with_values.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "ends_with_values".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "ends_with_values".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -535,9 +535,9 @@ fn ends_with_values() {
 fn any() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\any.db");
+          _ = fs::remove_file("C:\\Tests\\any.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "any".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "any".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -612,9 +612,9 @@ fn any() {
 fn all() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\all0.db");
+          _ = fs::remove_file("C:\\Tests\\all0.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "all0".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "all0".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -689,9 +689,9 @@ fn all() {
 fn count() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("G:\\count.db");
+          _ = fs::remove_file("C:\\Tests\\count.db");
 
-          let file_db = AioDatabase::create::<Person>("G:\\".into(), "count".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "count".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());

@@ -28,10 +28,10 @@ This is already used in production in affiliated company for specific use-case. 
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.7.1"
+rs_aio_db = "0.7.2"
 env_logger = "0.11.3"
 tokio = "1.38.0"
-bevy_reflect = "0.13.1"
+bevy_reflect = "0.14.0"
 serde = "1.0.203"
 ```
 
