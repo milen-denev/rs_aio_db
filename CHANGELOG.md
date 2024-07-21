@@ -1,5 +1,8 @@
 # Aio Database Release Notes
 
+### v0.7.3
+- Update dependencies
+
 ### v0.7.2
 - Update dependencies
 
