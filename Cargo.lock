@@ -1552,7 +1552,6 @@ dependencies = [
  "serde",
  "stopwatch",
  "tokio",
- "uuid",
 ]
 
 [[package]]
