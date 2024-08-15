@@ -493,12 +493,11 @@ pub(crate) fn create_unique_index<T:  Default + Struct + Clone> (
      columns: Vec<String>) -> String {
      let phantom = T::default();
      let generic_values = get_values_from_generic::<T>(&phantom);
+     
+     let generic_values_str: Vec<String> = generic_values.iter().map(|x| { let raw = format!("{:?}", *&x.field_name);raw.replace("\"", "") }).collect();
 
-     for value in generic_values.iter()  {
-          let raw = format!("{:?}", value.field_name);
-          let field_name = raw.replace("\"", "");
-          
-          if !columns.contains(&field_name) {
+     for column in columns.iter() {
+          if !generic_values_str.contains(column) {
                panic!("One of the specified columns isn't field of the struct of type T provided.");
           }
           else {
@@ -506,6 +505,7 @@ pub(crate) fn create_unique_index<T:  Default + Struct + Clone> (
           }
      }
 
+     drop(generic_values_str);
      drop(generic_values);
      drop(phantom);
 

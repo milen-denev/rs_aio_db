@@ -1,5 +1,8 @@
 # Aio Database Release Notes
 
+### v0.7.5
+- Hotfix for `create_unique_index`
+
 ### v0.7.4
 - Update dependencies
 - Add `create_unique_index` and `drop_index`

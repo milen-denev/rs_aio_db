@@ -771,6 +771,7 @@ fn create_index() {
         
         let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "count".into(), 15).await;
 
+        _ = file_db.create_unique_index::<Person>("first_name_unique", vec!["first_name".into()]).await;
         _ = file_db.create_unique_index::<Person>("id_unique", vec!["id".into()]).await;
 
         assert!(true);
@@ -785,9 +786,11 @@ fn drop_index() {
         _ = fs::create_dir("C:\\Tests\\");
 
         let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "drop_index".into(), 15).await;
-
+        
+        _ = file_db.create_unique_index::<Person>("first_name_unique", vec!["first_name".into()]).await;
         _ = file_db.create_unique_index::<Person>("id_unique", vec!["id".into()]).await;
         _ = file_db.drop_index("id_unique").await;
+        _ = file_db.drop_index("first_name_unique").await;
 
         assert!(true);
     });
