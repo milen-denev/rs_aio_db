@@ -23,8 +23,10 @@ use super::internal::queries::all_query;
 use super::internal::queries::any_count_query;
 use super::internal::queries::change_db_settings;
 use super::internal::queries::change_synchronous_settings;
+use super::internal::queries::create_unique_index;
 use super::internal::queries::create_table;
 use super::internal::queries::delete_value;
+use super::internal::queries::drop_index;
 use super::internal::queries::get_current_db_schema;
 use super::internal::queries::get_many_values;
 use super::internal::queries::get_single_value;
@@ -462,6 +464,35 @@ impl AioDatabase {
           else {
                return true;
           }
+     }
+
+     /// Create a unique index for a set of columns / struct fields if doesn't exist. Might lead to better performance.
+     pub async fn create_unique_index<'a, T: Default + Struct + Clone>(
+          &self,
+          index_name: &str,
+          columns: Vec<String>) -> Result<(), String> {
+          let conn = self.conn.clone().get().unwrap();
+          let query = create_unique_index::<T>(index_name, &self.name, columns);
+          
+          _ = conn.execute(&query, ()).await;
+
+          drop(conn);
+
+          Ok(())
+     }
+
+     /// Drop an index if exists.
+     pub async fn drop_index(
+          &self,
+          index_name: &str) -> Result<(), String> {
+          let conn = self.conn.clone().get().unwrap();
+          let query = drop_index(index_name);
+          
+          _ = conn.execute(&query, ()).await;
+
+          drop(conn);
+
+          Ok(())
      }
 
      pub fn get_bytes<'a, S: Serialize + Deserialize<'a>>(struct_to_bytes: S) -> Vec<u8> {

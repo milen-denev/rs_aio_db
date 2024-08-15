@@ -486,3 +486,52 @@ pub(crate) async fn get_many_values<'a, T:  Default + Struct + Clone>(query_resu
 
      query_result.value = Some(vec);
 }
+
+pub(crate) fn create_unique_index<T:  Default + Struct + Clone> (
+     index_name: &str,
+     table_name: &str, 
+     columns: Vec<String>) -> String {
+     let phantom = T::default();
+     let generic_values = get_values_from_generic::<T>(&phantom);
+
+     for value in generic_values.iter()  {
+          let raw = format!("{:?}", value.field_name);
+          let field_name = raw.replace("\"", "");
+          
+          if !columns.contains(&field_name) {
+               panic!("One of the specified columns isn't field of the struct of type T provided.");
+          }
+          else {
+               break;
+          }
+     }
+
+     drop(generic_values);
+     drop(phantom);
+
+     let mut query = format!("CREATE UNIQUE INDEX IF NOT EXISTS {} ON {} (", index_name, table_name);
+
+     for column in columns.iter().take(columns.iter().count() - 1) {
+          let column_string = format!("{},", column);
+          query.push_str(&column_string)
+     }
+
+     let last_column = columns.iter().last().unwrap();
+
+     let column_string = format!("{});", last_column);
+     query.push_str(&column_string);
+
+     debug!("Executing create unique index query: {}", query);
+
+     return query;
+}
+
+
+pub(crate) fn drop_index(
+     index_name: &str) -> String {
+     let query = format!("DROP INDEX IF EXISTS {}", index_name);
+
+     debug!("Executing drop index query: {}", query);
+
+     return query;
+}

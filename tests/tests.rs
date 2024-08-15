@@ -689,9 +689,9 @@ fn all() {
 fn count() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("C:\\Tests\\count.db");
+          _ = fs::remove_file("C:\\Tests\\create_index.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "count".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "create_index".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -759,5 +759,36 @@ fn count() {
                .await;
 
           assert_eq!(count, 3);
+    });
+}
+
+#[test]
+fn create_index() {
+    let rt = runtime::Builder::new_current_thread().build().unwrap();
+    rt.block_on(async { 
+        _ = fs::remove_file("C:\\Tests\\count.db");
+        _ = fs::create_dir("C:\\Tests\\");
+        
+        let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "count".into(), 15).await;
+
+        _ = file_db.create_unique_index::<Person>("id_unique", vec!["id".into()]).await;
+
+        assert!(true);
+    });
+}
+
+#[test]
+fn drop_index() {
+    let rt = runtime::Builder::new_current_thread().build().unwrap();
+    rt.block_on(async { 
+        _ = fs::remove_file("C:\\Tests\\drop_index.db");
+        _ = fs::create_dir("C:\\Tests\\");
+
+        let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "drop_index".into(), 15).await;
+
+        _ = file_db.create_unique_index::<Person>("id_unique", vec!["id".into()]).await;
+        _ = file_db.drop_index("id_unique").await;
+
+        assert!(true);
     });
 }

@@ -12,6 +12,7 @@
 - ORM-like API that is dead simple to use
 - Use anywhere
 - Support for `bool`, `u8`, `u16`, `u32`, `u64`, `i8`, `i16`, `i32`, `i64`, `char`, `String` and `Vec<u8>` Rust types
+- Support for creating and dropping unique indexes
 
 ## Production Readiness 
 
@@ -28,11 +29,11 @@ This is already used in production in affiliated company for specific use-case. 
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.7.3"
-env_logger = "0.11.3"
-tokio = "1.38.1"
-bevy_reflect = "0.14.0"
-serde = "1.0.204"
+rs_aio_db = "0.7.4"
+env_logger = "0.11.5"
+tokio = "1.39.2"
+bevy_reflect = "0.14.1"
+serde = "1.0.207"
 ```
 
 ### main.rs
@@ -169,6 +170,9 @@ async fn main() {
         .unwrap_or_default();
 
     println!("Ends with: {:?}", starts_with);
+
+    _ = file_db.create_unique_index::<Person>("name_unique", vec!["name".into()]).await;
+    _ = file_db.drop_index("name_unique").await;
 }
 ```
 
