@@ -113,7 +113,6 @@ pub(crate) struct AioDatabaseConnection {
 }
 
 unsafe impl Send for AioDatabase { }
-unsafe impl Send for AioDatabaseConnection { }
 
 impl ManageConnection for AioDatabaseConnection {
     type Connection = Connection;
