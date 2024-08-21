@@ -1,5 +1,8 @@
 # Aio Database Release Notes
 
+### v0.7.8
+- Drop completely `impl Send` for external and internal structs
+
 ### v0.7.7
 - Drop `impl Send` for R2D2 connection builder
 

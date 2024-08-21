@@ -112,8 +112,6 @@ pub(crate) struct AioDatabaseConnection {
      builder: Database
 }
 
-unsafe impl Send for AioDatabase { }
-
 impl ManageConnection for AioDatabaseConnection {
     type Connection = Connection;
     type Error = Error;

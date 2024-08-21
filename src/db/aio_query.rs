@@ -65,8 +65,6 @@ pub enum Next {
      Or
 }
 
-unsafe impl Send for Next { }
-
 impl QueryBuilder<'_> {
      /// Create a new instance of a QueryBuilder, used for querying 
      pub fn new<'a>(db: &'a AioDatabase) -> QueryBuilder<'a> {
@@ -268,5 +266,3 @@ impl<T> QueryRowsResult<T> {
 pub(crate) struct AnyCountResult {
      pub count_total: u64
 }
-
-unsafe impl Send for AnyCountResult { }
