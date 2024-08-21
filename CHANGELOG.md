@@ -1,5 +1,9 @@
 # Aio Database Release Notes
 
+### v0.7.6
+- Add `impl Send` for external and internal structs
+- Update dependencies
+
 ### v0.7.5
 - Hotfix for `create_unique_index`
 

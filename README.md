@@ -29,11 +29,11 @@ This is already used in production in affiliated company for specific use-case. 
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.7.5"
+rs_aio_db = "0.7.6"
 env_logger = "0.11.5"
-tokio = "1.39.2"
+tokio = "1.39.3"
 bevy_reflect = "0.14.1"
-serde = "1.0.207"
+serde = "1.0.208"
 ```
 
 ### main.rs

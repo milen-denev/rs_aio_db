@@ -20,6 +20,8 @@ pub struct QueryBuilder<'a> {
      pub db: &'a AioDatabase
 }
 
+unsafe impl<'a> Send for QueryBuilder<'a> { }
+
 /// Part of QueryBuilder's API for generating query.
 /// ### Example
 /// ```rust
@@ -33,6 +35,8 @@ pub struct QueryOption<'a> {
      pub next: Option<Next>,
      query_builder: Option<&'a QueryBuilder<'a>>
 }
+
+unsafe impl<'a> Send for QueryOption<'a> { }
 
 /// # Inspired by OData filter queries.
 /// - **Eq** = Equal
@@ -60,6 +64,8 @@ pub enum Next {
      And,
      Or
 }
+
+unsafe impl Send for Next { }
 
 impl QueryBuilder<'_> {
      /// Create a new instance of a QueryBuilder, used for querying 
@@ -189,6 +195,8 @@ pub(crate) struct QueryRowResult<T> {
      pub row: Arc<Row>
 }
 
+unsafe impl<T> Send for QueryRowResult<T> { }
+
 impl<T> QueryRowResult<T> {
      pub(crate) async fn new(
           query: String, 
@@ -229,6 +237,8 @@ pub(crate) struct QueryRowsResult<T> {
      pub rows: Arc<RwLock<Rows>>
 }
 
+unsafe impl<T> Send for QueryRowsResult<T> { }
+
 impl<T> QueryRowsResult<T> {
      pub(crate) async fn new_many(
           query: String, 
@@ -258,3 +268,5 @@ impl<T> QueryRowsResult<T> {
 pub(crate) struct AnyCountResult {
      pub count_total: u64
 }
+
+unsafe impl Send for AnyCountResult { }
