@@ -1,5 +1,5 @@
 use bevy_reflect::{GetField, ReflectMut, ReflectRef, Struct};
-use log::{debug, info};
+use log::debug;
 
 use crate::db::{aio_query::{Next, Operator, QueryRowResult}, models::{GenericValue, Schema}};
 
@@ -29,7 +29,7 @@ pub(crate) fn get_schema_from_generic<T:  Default + Struct>() -> Box<Vec<Schema>
      for (i, field) in my_struct.iter_fields().enumerate() {
           let field_name = reflected.name_at(i).unwrap();
           let field_type = field.reflect_type_ident().unwrap();
-          info!("Found field named '{}' of type '{}'", field_name, field_type);
+          debug!("Found field named '{}' of type '{}'", field_name, field_type);
 
           schema_vec.push(Schema {
                field_name: field_name.into(),

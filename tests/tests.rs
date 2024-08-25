@@ -689,9 +689,9 @@ fn all() {
 fn count() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-          _ = fs::remove_file("C:\\Tests\\create_index.db");
+          _ = fs::remove_file("C:\\Tests\\count.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "create_index".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "count".into(), 15).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -763,16 +763,33 @@ fn count() {
 }
 
 #[test]
-fn create_index() {
+fn create_unique_index() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
-        _ = fs::remove_file("C:\\Tests\\count.db");
+        _ = fs::remove_file("C:\\Tests\\create_unique_index.db");
         _ = fs::create_dir("C:\\Tests\\");
         
-        let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "count".into(), 15).await;
+        let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "create_unique_index".into(), 15).await;
 
         _ = file_db.create_unique_index::<Person>("first_name_unique", vec!["first_name".into()]).await;
         _ = file_db.create_unique_index::<Person>("id_unique", vec!["id".into()]).await;
+
+        assert!(true);
+    });
+}
+
+
+#[test]
+fn create_index() {
+    let rt = runtime::Builder::new_current_thread().build().unwrap();
+    rt.block_on(async { 
+        _ = fs::remove_file("C:\\Tests\\create_index.db");
+        _ = fs::create_dir("C:\\Tests\\");
+        
+        let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "create_index".into(), 15).await;
+
+        _ = file_db.create_index::<Person>("first_name_unique", vec!["first_name".into()]).await;
+        _ = file_db.create_index::<Person>("id_unique", vec!["id".into()]).await;
 
         assert!(true);
     });
@@ -795,3 +812,81 @@ fn drop_index() {
         assert!(true);
     });
 }
+
+// #[test]
+// fn concurrent_insert() {
+//     let rt = runtime::Builder::new_current_thread().build().unwrap();
+//     rt.block_on(async { 
+//         _ = fs::remove_file("C:\\Tests\\insert_concurrent_value.db");
+
+//         let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "insert_concurrent_value".into(), 15).await;
+
+//         let mut hash_map = HashMap::new();
+//         hash_map.insert("Key".into(), "Value1".into());
+
+//         let person = Person {
+//             id: 0,
+//             first_name: "Mylo".into(),
+//             last_name: "Lastnamsky".into(),
+//             age: 50,
+//             height: 2.10,
+//             married: false,
+//             address: "North Pole, Ice Street 0, NP0001".into(),
+//             date_of_birth: 1000000,
+//             comments: "It's very cold up there. Send help!".into(),
+//             some_blob: AioDatabase::get_bytes(AnotherStruct {
+//                 data_1: 5,
+//                 data_2: 10.4,
+//                 data_3:  hash_map.clone()
+//             })
+//         };
+
+//         _ = file_db.insert_value_concurrent(&person).await;
+
+//         let result = fs::File::open("C:\\Tests\\insert_value.db");
+
+//         assert_eq!(result.is_ok(), true);
+//     });
+// }
+
+// #[test]
+// fn concurrent_update() {
+//     let rt = runtime::Builder::new_current_thread().build().unwrap();
+//     rt.block_on(async { 
+//           _ = fs::remove_file("C:\\Tests\\update_concurrent_value.db");
+
+//           let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "update_concurrent_value".into(), 15).await;
+
+//           let mut hash_map = HashMap::new();
+//           hash_map.insert("Key".into(), "Value1".into());
+
+//           let person = Person {
+//                id: 0,
+//                first_name: "Mylo".into(),
+//                last_name: "Lastnamsky".into(),
+//                age: 50,
+//                height: 2.10,
+//                married: false,
+//                address: "North Pole, Ice Street 0, NP0001".into(),
+//                date_of_birth: 1000000,
+//                comments: "It's very cold up there. Send help!".into(),
+//                some_blob: AioDatabase::get_bytes(AnotherStruct {
+//                    data_1: 5,
+//                    data_2: 10.4,
+//                    data_3:  hash_map.clone()
+//                })
+//           };
+
+//           _ = file_db.insert_value(&person).await;
+
+//           let rows = file_db
+//                .query()
+//                .field("id")
+//                .where_is(Operator::Eq((0).to_string()), None)
+//                .update_value_concurrent(person)
+//                .await
+//                .unwrap();
+
+//           assert_eq!(rows, 1);
+//     });
+// }

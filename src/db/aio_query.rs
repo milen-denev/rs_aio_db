@@ -115,11 +115,25 @@ impl QueryBuilder<'_> {
           return db.update_value::<T>(value, where_query).await;
      }
 
+     /// Updates concurrently **all values** that matches the query filter with values of the struct of type **T**. Returns a Result of the number of rows affected or error if update was unsuccessful.
+     pub(crate) async fn _update_value_concurrent<'a, T: Default + Struct + Clone>(self, value: T)  -> Result<u64, String> {
+          let db = self.db;
+          let where_query = generate_where_query::<T>(&self);
+          return db._update_value_concurrent::<T>(value, where_query).await;
+     }
+
      /// Updates specific field / column that matches the query filter. Returns a Result of the number of rows affected or error if update was unsuccessful.
      pub async fn partial_update<'a, T: Default + Struct + Clone>(self, field_name: String, field_value: String)  -> Result<u64, String> {
           let db = self.db;
           let where_query = generate_where_query::<T>(&self);
           return db.partial_update::<T>(field_name, field_value, where_query).await;
+     }
+
+     /// Updates concurrently specific field / column that matches the query filter. Returns a Result of the number of rows affected or error if update was unsuccessful.
+     pub(crate) async fn _partial_update_concurrent<'a, T: Default + Struct + Clone>(self, field_name: String, field_value: String)  -> Result<u64, String> {
+          let db = self.db;
+          let where_query = generate_where_query::<T>(&self);
+          return db._partial_update_concurrent::<T>(field_name, field_value, where_query).await;
      }
 
      /// Deletes **all values** that match the query filter. Returns a Result of the number of rows affected or error if update was unsuccessful.

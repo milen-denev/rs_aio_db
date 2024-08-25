@@ -14,15 +14,18 @@ use crate::db::internal::helpers::get_system_char_delimiter;
 use crate::db::internal::queries::alter_table_drop_column;
 use crate::db::internal::queries::alter_table_new_column;
 
+use super::_WalMode;
 use super::aio_query::AnyCountResult;
 use super::aio_query::QueryBuilder;
 use super::aio_query::QueryRowResult;
 use super::aio_query::QueryRowsResult;
 use super::internal::helpers::get_schema_from_generic;
+use super::internal::queries::_set_wal_mode;
 use super::internal::queries::all_query;
 use super::internal::queries::any_count_query;
 use super::internal::queries::change_db_settings;
 use super::internal::queries::change_synchronous_settings;
+use super::internal::queries::create_index;
 use super::internal::queries::create_unique_index;
 use super::internal::queries::create_table;
 use super::internal::queries::delete_value;
@@ -32,6 +35,7 @@ use super::internal::queries::get_many_values;
 use super::internal::queries::get_single_value;
 use super::internal::queries::insert_value;
 use super::internal::queries::partial_update;
+use super::internal::queries::set_wal_mode_to_rollback;
 use super::internal::queries::update_value;
 use super::models::Schema;
 
@@ -136,7 +140,7 @@ impl ManageConnection for AioDatabaseConnection {
 }
 
 impl AioDatabase {
-     /// Create a locally persisted database.
+     /// Create a locally persisted database. Recommended to run `set_wal_mode` to WAL2 mode after creation.
      pub async fn create<'a, T>(location: String, name: String, max_pool_size: u32) -> AioDatabase  where T: Default + Struct + Clone  {       
           let db_location = format!("{}{}{}{}", location, get_system_char_delimiter(), name, ".db");
           let builder = Builder::new_local(db_location).build().await.unwrap();
@@ -282,6 +286,18 @@ impl AioDatabase {
           return db;
      }
 
+     /// Set `journal_mode` between WAL or WAL2. 
+     pub(crate) async fn _set_wal_mode(&self, wal_mode: _WalMode) -> Result<(), String> {
+          let conn = self.conn.clone().get().unwrap();
+          return _set_wal_mode(&conn, wal_mode).await;
+     }
+
+     /// Set `journal_mode` to `delete` in order to be compatible to older SQLite versions or to change the mode to WAL2 from WAL.
+     pub  async fn set_wal_mode_to_rollback(&self) {
+          let conn = self.conn.clone().get().unwrap();
+          _ = set_wal_mode_to_rollback(&conn).await;
+     }
+
      /// Sets how many retries should be made if a query fails. The delay between retries is 10ms.
      pub fn set_query_retries(&mut self, retries: u32) {
           self.retries = retries;
@@ -307,7 +323,21 @@ impl AioDatabase {
      /// Inserts a **T** value in the database. Returns if the insertion was successful or not after certain retries.
      pub async fn insert_value<'a, T:  Default + Struct + Clone>(&self, value: &T) -> Result<(), String> {
           let conn = self.conn.clone().get().unwrap();
-          let result = insert_value::<T>(&value, self.get_name(), conn, self.retries).await;
+          let result = insert_value::<T>(&value, self.get_name(), conn, self.retries, false).await;
+          if let Ok(result) = result {
+               return Ok(result);
+          }
+          else {
+               return Err(
+                    format!("Insert query retried {} times, but still failed. Increase retry count or lower the concurrent writes to database.", self.retries)
+               );
+          }
+     }
+
+     /// Inserts a **T** value in the database concurrently. Returns if the insertion was successful or not after certain retries.
+     pub(crate) async fn _insert_value_concurrent<'a, T:  Default + Struct + Clone>(&self, value: &T) -> Result<(), String> {
+          let conn = self.conn.clone().get().unwrap();
+          let result = insert_value::<T>(&value, self.get_name(), conn, self.retries, true).await;
           if let Ok(result) = result {
                return Ok(result);
           }
@@ -353,7 +383,20 @@ impl AioDatabase {
 
      pub(crate) async fn update_value<'a, T: Default + Struct + Clone>(&self, value: T, where_query: String) -> Result<u64, String> {
           let conn = self.conn.clone().get().unwrap();
-          let result = update_value::<T>(&value, self.get_name(), &where_query, conn, self.retries).await;
+          let result = update_value::<T>(&value, self.get_name(), &where_query, conn, self.retries, false).await;
+          if let Ok(result) = result {
+               return Ok(result);
+          }
+          else {
+               return Err(
+                    format!("Update query retried {} times, but still failed. Increase retry count or lower the concurrent writes to database.", self.retries)
+               );
+          }
+     }
+
+     pub(crate) async fn _update_value_concurrent<'a, T: Default + Struct + Clone>(&self, value: T, where_query: String) -> Result<u64, String> {
+          let conn = self.conn.clone().get().unwrap();
+          let result = update_value::<T>(&value, self.get_name(), &where_query, conn, self.retries, true).await;
           if let Ok(result) = result {
                return Ok(result);
           }
@@ -366,7 +409,20 @@ impl AioDatabase {
 
      pub(crate) async fn partial_update<'a, T: Default + Struct + Clone>(&self, field_name: String, field_value: String, where_query: String) ->  Result<u64, String> {
           let conn = self.conn.clone().get().unwrap();
-          let result = partial_update::<T>(field_name, field_value, self.get_name(), &where_query, conn, self.retries).await;
+          let result = partial_update::<T>(field_name, field_value, self.get_name(), &where_query, conn, self.retries, false).await;
+          if let Ok(result) = result {
+               return Ok(result);
+          }
+          else {
+               return Err(
+                    format!("Partial update query retried {} times, but still failed. Increase retry count or lower the concurrent writes to database.", self.retries)
+               );
+          }
+     }
+
+     pub(crate) async fn _partial_update_concurrent<'a, T: Default + Struct + Clone>(&self, field_name: String, field_value: String, where_query: String) ->  Result<u64, String> {
+          let conn = self.conn.clone().get().unwrap();
+          let result = partial_update::<T>(field_name, field_value, self.get_name(), &where_query, conn, self.retries, true).await;
           if let Ok(result) = result {
                return Ok(result);
           }
@@ -466,8 +522,23 @@ impl AioDatabase {
           }
      }
 
+     /// Create a non-unique index for a set of columns / struct fields if doesn't exist. Might lead to better performance.
+     pub async fn create_index<'a, T: Default + Struct + Clone> (
+          &self,
+          index_name: &str,
+          columns: Vec<String>) -> Result<(), String> {
+          let conn = self.conn.clone().get().unwrap();
+          let query = create_index::<T>(index_name, &self.name, columns);
+          
+          _ = conn.execute(&query, ()).await;
+
+          drop(conn);
+
+          Ok(())
+     }
+
      /// Create a unique index for a set of columns / struct fields if doesn't exist. Might lead to better performance.
-     pub async fn create_unique_index<'a, T: Default + Struct + Clone>(
+     pub async fn create_unique_index<'a, T: Default + Struct + Clone> (
           &self,
           index_name: &str,
           columns: Vec<String>) -> Result<(), String> {

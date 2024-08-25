@@ -1,5 +1,15 @@
 # Aio Database Release Notes
 
+### v0.7.9
+- Prepared WAL and WAL2 modes support through `set_wal_mode`
+- Prepared DELETE mode support through `set_wal_mode_to_rollback` for backward compatibility and easy switch between WAL and WAL2 modes
+- Prepared concurrent APIs for `insert_value_concurrent`, `update_value_concurrent`, `partial_update_concurrent`
+- Update dependencies
+- Added `create_index` for non-unique indexes API
+
+### v0.7.8
+- Drop completely `impl Send` for external and internal structs
+
 ### v0.7.8
 - Drop completely `impl Send` for external and internal structs
 

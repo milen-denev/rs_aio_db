@@ -8,7 +8,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rs_aio_db = "0.7.8"
+rs_aio_db = "0.7.9"
 tokio = "1.39.3"
 bevy_reflect = "0.14.1"
 stopwatch = "0.0.7"

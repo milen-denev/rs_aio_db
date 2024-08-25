@@ -3,9 +3,9 @@ use std::{sync::Arc, time::Duration};
 use bevy_reflect::Struct;
 use hex::encode;
 use libsql::Connection;
-use log::{debug, info};
+use log::{error, trace};
 use r2d2::PooledConnection;
-use crate::db::{aio_database::AioDatabaseConnection, aio_query::{QueryBuilder, QueryRowResult, QueryRowsResult}, internal::helpers::{get_values_from_generic, query_match_operators}, models::Schema};
+use crate::db::{aio_database::AioDatabaseConnection, aio_query::{QueryBuilder, QueryRowResult, QueryRowsResult}, internal::helpers::{get_values_from_generic, query_match_operators}, models::Schema, _WalMode};
 use super::{helpers::set_values_from_row_result, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
 
 static SLEEP_DURATION: Duration = Duration::from_millis(10); //Retry every 10ms
@@ -19,33 +19,55 @@ pub(crate) async fn create_table(schema_vec: &Vec<Schema>, name: &str, connectio
 }
 
 pub(crate) async fn change_db_settings(connection: &Connection) {
-     _ = connection.execute("PRAGMA journal_mode=WAL;", ())
+     let wal_query = format!("PRAGMA journal_mode=WAL;");
+
+     _ = connection.execute_batch(&wal_query)
           .await;
 
-     _ = connection.execute("PRAGMA journal_size_limit=-1;", ())
+     _ = connection.execute_batch("PRAGMA journal_size_limit=-1;")
           .await;
 
-     _ = connection.execute("PRAGMA auto_vacuum=FULL;", ())
+     _ = connection.execute_batch("PRAGMA auto_vacuum=FULL;")
           .await;
 
-     _ = connection.execute("PRAGMA temp_store=MEMORY;", ())
+     _ = connection.execute_batch("PRAGMA temp_store=MEMORY;")
+          .await;
+}
+
+pub(crate) async fn _set_wal_mode(connection: &Connection, wal_mode: _WalMode) -> Result<(), String> {
+     let query = format!("PRAGMA journal_mode={};", wal_mode.to_string());
+     trace!("Executing insert query: {}", query);
+     let result = connection.execute(&query, ())
+          .await;
+
+     if let Ok(_) = result {
+          Ok(())
+     } else {
+          Err(result.unwrap_err().to_string())
+     }
+}
+
+pub(crate) async fn set_wal_mode_to_rollback(connection: &Connection) {
+     let query = format!("PRAGMA journal_mode=DELETE;");
+     trace!("Executing insert query: {}", query);
+     _ = connection.execute_batch(&query)
           .await;
 }
 
 pub(crate) async fn change_synchronous_settings(connection: &Connection, val: bool) {
      if !val {
-          _ = connection.execute(" PRAGMA synchronous=OFF;", ())
+          _ = connection.execute_batch("PRAGMA synchronous=OFF;")
                .await;
      }
      else {
-          _ = connection.execute(" PRAGMA synchronous=NORMAL;", ())
+          _ = connection.execute_batch("PRAGMA synchronous=NORMAL;")
                .await;
      }
 }
 
 pub(crate) async fn get_current_db_schema(name: &str, connection: &Connection) -> Option<Vec<Schema>> {  
      let query = format!("SELECT sql FROM sqlite_schema WHERE name = '{}'", name);
-
+     trace!("Executing insert query: {}", query);
      let result_query = connection
           .query(&query, ())
           .await;
@@ -80,7 +102,7 @@ pub(crate) async fn alter_table_new_column(name: &str, schema: &Schema, connecti
      let column_name = schema.field_name.as_str();
 
      let query = format!("ALTER TABLE {name} ADD COLUMN {column_name} {sql_type}");
-
+     trace!("Executing insert query: {}", query);
      connection.execute(&query, ())
           .await
           .unwrap();
@@ -88,7 +110,7 @@ pub(crate) async fn alter_table_new_column(name: &str, schema: &Schema, connecti
 
 pub(crate) async fn alter_table_drop_column(name: &str, column_name: &str, connection: &Connection) {
      let query = format!("ALTER TABLE {name} DROP COLUMN {column_name}");
-
+     trace!("Executing insert query: {}", query);
      connection.execute(&query, ())
           .await
           .unwrap();
@@ -98,11 +120,18 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
      value: &T, 
      table_name: &str, 
      connection: PooledConnection<AioDatabaseConnection>, 
-     time_to_retry: u32) -> 
+     time_to_retry: u32, 
+     concurrent: bool) -> 
      Result<(), ()>
 {
      let generic_values = get_values_from_generic::<T>(value);
-     let mut query = format!("INSERT INTO {} (", table_name);
+     let mut query = {
+          if concurrent {
+               format!("BEGIN CONCURRENT; \n INSERT INTO {} (", table_name)
+          } else {
+               format!("INSERT INTO {} (", table_name)
+          }
+     };
 
      for generic_value in generic_values.iter().take(generic_values.len() - 1) {
           query.push_str(generic_value.field_name.as_str());
@@ -184,7 +213,12 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
           query.push(')');
      }
 
-     debug!("Executing insert query: {}", query);
+     if concurrent {
+          query.push_str("; \n");
+          query.push_str("COMMIT;");
+     }
+
+     trace!("Executing insert query: {}", query);
 
      let mut retries = 0;
 
@@ -196,7 +230,7 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
          }
          else {
              let error = function_result.unwrap_err();
-             info!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
+             error!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
              retries = retries + 1;
          }
          tokio::time::sleep(SLEEP_DURATION).await;
@@ -232,7 +266,7 @@ pub(crate) fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder
           query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, true, Some(next));     
      }
 
-     debug!("Executing get query: {}", query);
+     trace!("Executing get query: {}", query);
 
      return query;
 }
@@ -257,7 +291,7 @@ pub(crate) fn generate_where_query<'a, T:  Default + Struct + Clone>(query_build
      let operator = option.operator.as_ref().unwrap();
      query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, true, Some(next));
 
-     debug!("Executing where query: {}", query);
+     trace!("Executing where query: {}", query);
 
      return query;
 }
@@ -267,10 +301,18 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
      table_name: &str, 
      where_query: &str, 
      connection: PooledConnection<AioDatabaseConnection>,
-     time_to_retry: u32) -> 
+     time_to_retry: u32, 
+     concurrent: bool) -> 
      Result<u64, ()> {
      let generic_values = get_values_from_generic::<T>(value);
-     let mut query = format!("UPDATE {} SET ", table_name);
+
+     let mut query = {
+          if concurrent {
+               format!("BEGIN CONCURRENT; \n UPDATE {} SET ", table_name)
+          } else {
+               format!("UPDATE {} SET ", table_name)
+          }
+     };
 
      for generic_value in generic_values.iter().take(generic_values.len() - 1) {
           let name = generic_value.field_name.as_str();
@@ -341,7 +383,11 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
 
      query.push_str(where_query);
 
-     debug!("Executing update query: {}", query);
+     if concurrent {
+          query.push_str("; \n COMMIT;");
+     }
+
+     trace!("Executing update query: {}", query);
 
      let mut retries = 0;
 
@@ -353,7 +399,7 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
          }
          else {
              let error = function_result.unwrap_err();
-             info!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
+             error!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
              retries = retries + 1;
          }
          tokio::time::sleep(SLEEP_DURATION).await;
@@ -368,11 +414,18 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone> (
      table_name: &str, 
      where_query: &str, 
      connection: PooledConnection<AioDatabaseConnection>,
-     time_to_retry: u32) -> 
+     time_to_retry: u32,
+     concurrent: bool) -> 
      Result<u64, ()> {
-     
-     let mut query = format!("UPDATE {} SET ", table_name);
 
+     let mut query = {
+          if concurrent {
+               format!("BEGIN CONCURRENT; \n UPDATE {} SET ", table_name)
+          } else {
+               format!("UPDATE {} SET ", table_name)
+          }
+     };
+     
      let name = field_name;
      let value = field_value;
 
@@ -388,7 +441,11 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone> (
 
      query.push_str(where_query);
 
-     debug!("Executing partial update query: {}", query);
+     if concurrent {
+          query.push_str("; \n COMMIT;");
+     }
+
+     trace!("Executing partial update query: {}", query);
      
      let mut retries = 0;
 
@@ -400,7 +457,7 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone> (
          }
          else {
              let error = function_result.unwrap_err();
-             info!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
+             error!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
              retries = retries + 1;
          }
          tokio::time::sleep(SLEEP_DURATION).await;
@@ -418,7 +475,7 @@ pub(crate) async fn delete_value<T:  Default + Struct + Clone> (
      let mut query = format!("DELETE FROM {} ", table_name);
      query.push_str(where_query);
 
-     debug!("Executing delete query: {}", query);
+     trace!("Executing delete query: {}", query);
 
      let mut retries = 0;
 
@@ -430,7 +487,7 @@ pub(crate) async fn delete_value<T:  Default + Struct + Clone> (
          }
          else {
              let error = function_result.unwrap_err();
-             info!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
+             error!("Error occurred on {} retry. Message: {:?}", retries + 1, error);
              retries = retries + 1;
          }
          tokio::time::sleep(SLEEP_DURATION).await;
@@ -445,7 +502,7 @@ pub(crate) async fn any_count_query<T:  Default + Struct + Clone> (
      let mut query = format!("SELECT COUNT(*) AS count_total FROM {} ", table_name);
      query.push_str(where_query);
 
-     debug!("Executing any / count query: {}", query);
+     trace!("Executing any / count query: {}", query);
 
      return query;
 }
@@ -454,7 +511,7 @@ pub(crate) async fn all_query<T:  Default + Struct + Clone>(
      table_name: &str) -> String {
      let query = format!("SELECT COUNT(*) AS count_total FROM {} ", table_name);
 
-     debug!("Executing all query: {}", query);
+     trace!("Executing all query: {}", query);
 
      return query;
 }
@@ -521,17 +578,55 @@ pub(crate) fn create_unique_index<T:  Default + Struct + Clone> (
      let column_string = format!("{});", last_column);
      query.push_str(&column_string);
 
-     debug!("Executing create unique index query: {}", query);
+     trace!("Executing create unique index query: {}", query);
 
      return query;
 }
 
+pub(crate) fn create_index<T:  Default + Struct + Clone> (
+     index_name: &str,
+     table_name: &str, 
+     columns: Vec<String>) -> String {
+     let phantom = T::default();
+     let generic_values = get_values_from_generic::<T>(&phantom);
+     
+     let generic_values_str: Vec<String> = generic_values.iter().map(|x| { let raw = format!("{:?}", *&x.field_name);raw.replace("\"", "") }).collect();
+
+     for column in columns.iter() {
+          if !generic_values_str.contains(column) {
+               panic!("One of the specified columns isn't field of the struct of type T provided.");
+          }
+          else {
+               break;
+          }
+     }
+
+     drop(generic_values_str);
+     drop(generic_values);
+     drop(phantom);
+
+     let mut query = format!("CREATE INDEX IF NOT EXISTS {} ON {} (", index_name, table_name);
+
+     for column in columns.iter().take(columns.iter().count() - 1) {
+          let column_string = format!("{},", column);
+          query.push_str(&column_string)
+     }
+
+     let last_column = columns.iter().last().unwrap();
+
+     let column_string = format!("{});", last_column);
+     query.push_str(&column_string);
+
+     trace!("Executing create unique index query: {}", query);
+
+     return query;
+}
 
 pub(crate) fn drop_index(
      index_name: &str) -> String {
      let query = format!("DROP INDEX IF EXISTS {}", index_name);
 
-     debug!("Executing drop index query: {}", query);
+     trace!("Executing drop index query: {}", query);
 
      return query;
 }
