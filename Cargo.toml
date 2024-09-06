@@ -3,7 +3,7 @@ exclude = ["example/*", "benches/*"]
 
 [package]
 name = "rs_aio_db"
-version = "0.7.9"
+version = "0.7.10"
 edition = "2021"
 repository = "https://github.com/milen-denev/rs_aio_db"
 license = "Apache-2.0"
@@ -15,8 +15,8 @@ description = "All in one (aka Aio) database with async support. Based on libsql
 
 [dependencies]
 libsql = "0.4.0"
-bevy_reflect = "0.14.1"
-tokio = "1.39.3"
+bevy_reflect = "0.14.2"
+tokio = "1.40.0"
 log = "0.4.22"
 env_logger = "0.11.5"
 stopwatch = "0.0.7"

@@ -1,5 +1,8 @@
 # Aio Database Release Notes
 
+### v0.7.10
+- Update dependencies
+
 ### v0.7.9
 - Prepared WAL and WAL2 modes support through `set_wal_mode`
 - Prepared DELETE mode support through `set_wal_mode_to_rollback` for backward compatibility and easy switch between WAL and WAL2 modes
