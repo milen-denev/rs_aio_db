@@ -14,13 +14,13 @@ description = "All in one (aka Aio) database with async support. Based on libsql
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-libsql = "0.4.0"
-bevy_reflect = "0.14.2"
-tokio = "1.40.0"
-log = "0.4.22"
-env_logger = "0.11.5"
+libsql = "=0.4.0"
+bevy_reflect = "0.14"
+tokio = "1"
+log = "0.4"
+env_logger = "0.11"
 stopwatch = "0.0.7"
-r2d2 = "0.8.10"
-serde = "1.0.209"
-bincode = "1.3.3"
-hex = "0.4.3"
+r2d2 = "0.8"
+serde = "1.0"
+bincode = "1"
+hex = "0.4"
