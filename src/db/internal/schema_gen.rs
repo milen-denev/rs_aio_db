@@ -1,16 +1,32 @@
 use crate::db::models::Schema;
 
 pub(crate) fn get_sql_type(rust_type: &str) -> Option<String> {
+
+     // "bool" => return Some("NUMERIC".into()),
+     // "u8" => return Some("INTEGER".into()),
+     // "u16" => return Some("INTEGER".into()),
+     // "u32" => return Some("BIGINT".into()),
+     // "u64" => return Some("UNSIGNED BIG INT".into()),
+     // "i8" => return Some("TINYINT".into()),
+     // "i16" => return Some("SMALLINT".into()),
+     // "i32" => return Some("INTEGER".into()),
+     // "i64" => return Some("BIGINT".into()),
+     // "f32" => return Some("REAL".into()),
+     // "f64" => return Some("REAL".into()),
+     // "char" => return Some("TEXT".into()),
+     // "String" => return Some("TEXT".into()),
+     // "Vec" => return Some("BLOB".into()),
+
      match rust_type {
           "bool" => return Some("NUMERIC".into()),
           "u8" => return Some("INTEGER".into()),
           "u16" => return Some("INTEGER".into()),
-          "u32" => return Some("BIGINT".into()),
-          "u64" => return Some("UNSIGNED BIG INT".into()),
-          "i8" => return Some("TINYINT".into()),
-          "i16" => return Some("SMALLINT".into()),
+          "u32" => return Some("INTEGER".into()),
+          "u64" => return Some("INTEGER".into()),
+          "i8" => return Some("INTEGER".into()),
+          "i16" => return Some("INTEGER".into()),
           "i32" => return Some("INTEGER".into()),
-          "i64" => return Some("BIGINT".into()),
+          "i64" => return Some("INTEGER".into()),
           "f32" => return Some("REAL".into()),
           "f64" => return Some("REAL".into()),
           "char" => return Some("TEXT".into()),

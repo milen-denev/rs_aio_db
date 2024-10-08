@@ -24,16 +24,24 @@ This is already used in production in affiliated company for specific use-case. 
 - Additional Query options.
 - Additional options for AioDatabase instances apart from the in-memory and local storage drive.
 
+## Build issue on Windows Machine
+
+### Reason: 
+The reason this occurs is because in the build.rs script the developers of libsql have put the Linux cp command for copying, which is not available on windows.
+
+### Fix: 
+I created my own copycat of cp, [rust_cp](https://github.com/milen-denev/rust_cp). The repository has compiled binary, put this in any location you want on your windows system, and add Path environment variable, restart the system, and it should work.
+
 ## Examples
 
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.7.10"
-env_logger = "0.11.5"
-tokio = "1.40.0"
-bevy_reflect = "0.14.2"
-serde = "1.0.209"
+rs_aio_db = "0.7.11"
+env_logger = "0.11"
+tokio = "1"
+bevy_reflect = "0.14"
+serde = "1.0"
 ```
 
 ### main.rs
