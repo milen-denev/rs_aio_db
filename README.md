@@ -1,6 +1,10 @@
 # Aio Database
 ## All in one database with dead simple API
 
+## Note:
+rusqlite edition: 0.8.x
+libsql edition: 0.7.x
+
 ## Features
 
 - Auto migration: If additional or fewer fields are introduced to a structure, it immediately updates the database schema.
@@ -63,10 +67,10 @@ async fn main() {
     env_logger::init();
 
     //Locally persisted database
-    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into(), 15).await;
+    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
 
     //In-Memory database
-    let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into(), 15).await;
+    let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into()).await;
 
     let mut hash_map = HashMap::new();
     hash_map.insert("Key1".into(), "Value1".into());
