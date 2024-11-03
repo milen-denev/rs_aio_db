@@ -2,15 +2,15 @@
 ## All in one database with dead simple API
 
 ## Note:
-rusqlite edition: 0.8.x
 libsql edition: 0.7.x
+rusqlite edition: 0.8.x
 
 ## Features
 
 - Auto migration: If additional or fewer fields are introduced to a structure, it immediately updates the database schema.
 - Local or In-Memory Capability: All functionality operates within local storage or in-memory systems.
 - Fully implemented CRUD functionality
-- Highly Performant: Offers very good performance, by doing some preliminary tests it seems that the overhead from both main libraries that I use (libsql and bevy_reflect) plus the overhead from my library is small enough to be unnoticeable, reading 1000 rows one by one took 28ms. 
+- Highly Performant: Offers very good performance, by doing some preliminary tests it seems that the overhead from both main libraries that I use (rusqlite and bevy_reflect) plus the overhead from my library is small enough to be unnoticeable, reading 1000 rows one by one took 28ms. 
 - Async Support with Tokio
 - Highly Concurrent due to the internal connection pooling
 - ORM-like API that is dead simple to use
@@ -27,12 +27,20 @@ This is already used in production in affiliated company for specific use-case. 
 - Use of Moka cache for bypassing the local storage and increase performance.
 - Additional Query options.
 
+## Build issue on Windows Machine
+
+### Reason: 
+The reason this occurs is because in the build.rs script the developers of rusqlite have put the Linux cp command for copying, which is not available on windows.
+
+### Fix: 
+I created my own copycat of cp, [rust_cp](https://github.com/milen-denev/rust_cp). The repository has compiled binary, put this in any location you want on your windows system, and add Path environment variable, restart the system, and it should work.
+
 ## Examples
 
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.8.0"
+rs_aio_db = "0.7.11"
 env_logger = "0.11"
 tokio = "1"
 bevy_reflect = "0.14"
@@ -178,19 +186,3 @@ async fn main() {
     _ = file_db.drop_index("name_unique").await;
 }
 ```
-
-### Benchmarks
-
-#### Figure 1
-![image](https://github.com/milen-denev/rs_aio_db/blob/master/benches/images/benchmark_02042023.jpg)
-
-#### Figure 2
-![image](https://github.com/milen-denev/rs_aio_db/blob/master/benches/images/high_con_perf_03042024.jpg)
-
-#### Explanation
-
-**First Image:**
-All of this 4 benchmarks has been done synchronously. The point of synchronously executing 1000 times each test was to see how much overhead does my library add to libsql and bevy_reflect. As it seems from the 3rd test which executed 1000 times not much (**28ms**). For retrieving 1 row it took on average 0.0028ms or 28us which is fast. Let's not forget the latency of the SSD itself and the Sqlite engine which for sure adds more to the equation. When executed the first and second test scenario my SSD reached latency of 21.1ms and 90% usage for sure is the reason behind the 3+ seconds for 1000 row inserts and row updates. It's under investigation.
-
-**Second Image:**
-The image shows the result of a K6 on actix-web + AioDatabase setup. It performed insanely well on 5000 concurrent connections with a pool size of 15. The code behind this can be be found under **/example** folder within the repository.
