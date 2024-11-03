@@ -1,6 +1,10 @@
 # Aio Database
 ## All in one database with dead simple API
 
+## Note:
+libsql edition: 0.7.x
+rusqlite edition: 0.8.x
+
 ## Features
 
 - Auto migration: If additional or fewer fields are introduced to a structure, it immediately updates the database schema.
