@@ -1,11 +1,9 @@
 use core::str;
-use std::sync::{Arc, RwLock};
 
 use bevy_reflect::{Reflect, Struct};
-use libsql::{Row, Rows};
-use r2d2::PooledConnection;
+use rusqlite::{Connection, Statement};
 
-use super::{aio_database::{AioDatabase, AioDatabaseConnection}, internal::queries::{generate_get_query, generate_where_query}};
+use super::{aio_database::AioDatabase, internal::queries::{generate_get_query, generate_where_query}};
 
 /// Used for building a SQL query through a simple Rust API for querying AioDatabase.
 /// ### Example
@@ -109,35 +107,35 @@ impl QueryBuilder<'_> {
      }
 
      /// Updates **all values** that matches the query filter with values of the struct of type **T**. Returns a Result of the number of rows affected or error if update was unsuccessful.
-     pub async fn update_value<'a, T: Default + Struct + Clone>(self, value: T)  -> Result<u64, String> {
+     pub async fn update_value<'a, T: Default + Struct + Clone>(self, value: T)  -> Result<usize, String> {
           let db = self.db;
           let where_query = generate_where_query::<T>(&self);
           return db.update_value::<T>(value, where_query).await;
      }
 
      /// Updates concurrently **all values** that matches the query filter with values of the struct of type **T**. Returns a Result of the number of rows affected or error if update was unsuccessful.
-     pub(crate) async fn _update_value_concurrent<'a, T: Default + Struct + Clone>(self, value: T)  -> Result<u64, String> {
+     pub async fn update_value_concurrent<'a, T: Default + Struct + Clone>(self, value: T)  -> Result<usize, String> {
           let db = self.db;
           let where_query = generate_where_query::<T>(&self);
-          return db._update_value_concurrent::<T>(value, where_query).await;
+          return db.update_value_concurrent::<T>(value, where_query).await;
      }
 
      /// Updates specific field / column that matches the query filter. Returns a Result of the number of rows affected or error if update was unsuccessful.
-     pub async fn partial_update<'a, T: Default + Struct + Clone>(self, field_name: String, field_value: String)  -> Result<u64, String> {
+     pub async fn partial_update<'a, T: Default + Struct + Clone>(self, field_name: String, field_value: String)  -> Result<usize, String> {
           let db = self.db;
           let where_query = generate_where_query::<T>(&self);
           return db.partial_update::<T>(field_name, field_value, where_query).await;
      }
 
      /// Updates concurrently specific field / column that matches the query filter. Returns a Result of the number of rows affected or error if update was unsuccessful.
-     pub(crate) async fn _partial_update_concurrent<'a, T: Default + Struct + Clone>(self, field_name: String, field_value: String)  -> Result<u64, String> {
+     pub async fn partial_update_concurrent<'a, T: Default + Struct + Clone>(self, field_name: String, field_value: String)  -> Result<usize, String> {
           let db = self.db;
           let where_query = generate_where_query::<T>(&self);
-          return db._partial_update_concurrent::<T>(field_name, field_value, where_query).await;
+          return db.partial_update_concurrent::<T>(field_name, field_value, where_query).await;
      }
 
      /// Deletes **all values** that match the query filter. Returns a Result of the number of rows affected or error if update was unsuccessful.
-     pub async fn delete_value<'a, T: Default + Struct + Clone>(self) -> Result<u64, String> {
+     pub async fn delete_value<'a, T: Default + Struct + Clone>(self) -> Result<usize, String> {
           let db = self.db;
           let where_query = generate_where_query::<T>(&self);
           return db.delete_value::<T>(where_query).await;
@@ -201,41 +199,25 @@ impl QueryOption<'_> {
      }
 }
 
-#[derive(Clone)]
-pub(crate) struct QueryRowResult<T> {
+pub(crate) struct QueryRowResult<'a, T> {
      pub value: Option<T>,
-     pub row: Arc<Row>
+     pub rows: Statement<'a>
 }
 
-unsafe impl<T> Send for QueryRowResult<T> { }
+unsafe impl<'a, T> Send for QueryRowResult<'a, T> { }
 
-impl<T> QueryRowResult<T> {
+impl<'a, T> QueryRowResult<'a, T> {
      pub(crate) async fn new(
           query: String, 
-          connection: PooledConnection<AioDatabaseConnection>) -> Option<QueryRowResult<T>> { 
-          let sql_result = connection
-               .query(&query, ())
-               .await;
+          connection: &'a Connection) -> Option<QueryRowResult<'a, T>> { 
+          let statement = connection.prepare(&query);
           
-          if let Ok(mut sql_rows) = sql_result {
-               let row_result = sql_rows
-                    .next()
-                    .await;
+          if let Ok(sql_rows) = statement {
 
-               if let Ok(row_option) = row_result {
-                    if let Some(row) = row_option {
-                         return Some(QueryRowResult::<T> {
-                              value: None,
-                              row: Arc::new(row)
-                         });
-                    }
-                    else {
-                         return None;
-                    }
-               }
-               else {
-                    return None;
-               }
+               return Some(QueryRowResult::<'a, T> {
+                    value: None,
+                    rows: sql_rows
+               });
           }
           else {
                return None
@@ -243,27 +225,24 @@ impl<T> QueryRowResult<T> {
      }
 }
 
-#[derive(Clone)]
-pub(crate) struct QueryRowsResult<T> {
-     pub value: Option<Vec<T>>,
-     pub rows: Arc<RwLock<Rows>>
+pub(crate) struct QueryRowsResult<'a, T> {
+     pub _value: Option<Vec<T>>,
+     pub rows: Statement<'a>
 }
 
-unsafe impl<T> Send for QueryRowsResult<T> { }
+unsafe impl<'a, T> Send for QueryRowsResult<'a, T> { }
 
-impl<T> QueryRowsResult<T> {
+impl<'a, T> QueryRowsResult<'a, T> {
      pub(crate) async fn new_many(
           query: String, 
-          connection: PooledConnection<AioDatabaseConnection>) -> Option<QueryRowsResult<T>> {
-          let sql_result = connection
-               .query(&query, ())
-               .await;
+          connection: &Connection) -> Option<QueryRowsResult<T>> {
+          let statement = connection.prepare(&query);
 
-          if let Ok(sql_rows) = sql_result {
+          if let Ok(sql_rows) = statement {
                if sql_rows.column_count() > 0 {
                     return Some(QueryRowsResult::<T> {
-                         value: None,
-                         rows: Arc::new(RwLock::new(sql_rows))
+                         _value: None,
+                         rows: sql_rows
                     });
                }
                else {

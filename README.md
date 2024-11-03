@@ -22,22 +22,13 @@ This is already used in production in affiliated company for specific use-case. 
 
 - Use of Moka cache for bypassing the local storage and increase performance.
 - Additional Query options.
-- Additional options for AioDatabase instances apart from the in-memory and local storage drive.
-
-## Build issue on Windows Machine
-
-### Reason: 
-The reason this occurs is because in the build.rs script the developers of libsql have put the Linux cp command for copying, which is not available on windows.
-
-### Fix: 
-I created my own copycat of cp, [rust_cp](https://github.com/milen-denev/rust_cp). The repository has compiled binary, put this in any location you want on your windows system, and add Path environment variable, restart the system, and it should work.
 
 ## Examples
 
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.7.11"
+rs_aio_db = "0.8.0"
 env_logger = "0.11"
 tokio = "1"
 bevy_reflect = "0.14"

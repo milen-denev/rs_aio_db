@@ -1,5 +1,10 @@
 # Aio Database Release Notes
 
+### v0.8.0
+- Update dependencies
+- *MAJOR CHANGE:*Change the sqlite provider from libsql to rusqlite
+- Internal updates and refactoring
+
 ### v0.7.11
 - Update dependencies
 - Rollback multiple types in `INTEGER` type mapping

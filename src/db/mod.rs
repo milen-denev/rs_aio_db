@@ -6,12 +6,12 @@ pub mod models;
 pub mod aio_query;
 
 #[derive(Debug)]
-pub(crate) enum _WalMode {
+pub enum WalMode {
      WAL,
-     WAL2
+     //WAL2
 }
 
-impl fmt::Display for _WalMode {
+impl fmt::Display for WalMode {
      fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
          write!(f, "{:?}", self)
      }

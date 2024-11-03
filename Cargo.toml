@@ -3,24 +3,23 @@ exclude = ["example/*", "benches/*"]
 
 [package]
 name = "rs_aio_db"
-version = "0.7.11"
+version = "0.8.0"
 edition = "2021"
 repository = "https://github.com/milen-denev/rs_aio_db"
 license = "Apache-2.0"
-keywords = ["database", "libsql", "sqlite"]
+keywords = ["database", "sqlite"]
 authors = ["Milen Denev"]
-description = "All in one (aka Aio) database with async support. Based on libsql/Sqlite, bevy_reflect and tokio, includes a dead simple API to be used (no SQL needed just pure Rust). Comes with automigration."
+description = "All in one (aka Aio) database with async support. Based on sqlite, bevy_reflect and tokio, includes a dead simple API to be used (no SQL needed just pure Rust). Comes with automigration."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-libsql = "0.6.0"
+rusqlite = { version = "0.32", features = ["bundled"] }
 bevy_reflect = "0.14"
-tokio = "1"
+tokio = {version = "1" , features = ["full"] }
 log = "0.4"
-env_logger = "0.11"
-stopwatch = "0.0.7"
-r2d2 = "0.8"
-serde = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 bincode = "1"
 hex = "0.4"
+stopwatch = "0.0.7"
+env_logger = "0.11"
