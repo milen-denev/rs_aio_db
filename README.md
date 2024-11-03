@@ -22,7 +22,6 @@ This is already used in production in affiliated company for specific use-case. 
 
 - Use of Moka cache for bypassing the local storage and increase performance.
 - Additional Query options.
-- Additional options for AioDatabase instances apart from the in-memory and local storage drive.
 
 ## Build issue on Windows Machine
 
@@ -72,10 +71,10 @@ async fn main() {
     env_logger::init();
 
     //Locally persisted database
-    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into(), 15).await;
+    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
 
     //In-Memory database
-    let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into(), 15).await;
+    let in_memory_db = AioDatabase::create_in_memory::<Person>("Test".into()).await;
 
     let mut hash_map = HashMap::new();
     hash_map.insert("Key1".into(), "Value1".into());

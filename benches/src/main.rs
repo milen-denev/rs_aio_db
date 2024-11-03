@@ -14,7 +14,7 @@ async fn main() {
     _ = fs::remove_file("G:\\Test.db");
 
     //Locally persisted database
-    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into(), 15).await;
+    let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
 
     let mut sw = stopwatch::Stopwatch::start_new();
 

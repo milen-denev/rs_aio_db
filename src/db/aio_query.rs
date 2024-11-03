@@ -2,10 +2,9 @@ use core::str;
 use std::sync::{Arc, RwLock};
 
 use bevy_reflect::{Reflect, Struct};
-use libsql::{Row, Rows};
-use r2d2::PooledConnection;
+use libsql::{Connection, Row, Rows};
 
-use super::{aio_database::{AioDatabase, AioDatabaseConnection}, internal::queries::{generate_get_query, generate_where_query}};
+use super::{aio_database::AioDatabase, internal::queries::{generate_get_query, generate_where_query}};
 
 /// Used for building a SQL query through a simple Rust API for querying AioDatabase.
 /// ### Example
@@ -212,7 +211,7 @@ unsafe impl<T> Send for QueryRowResult<T> { }
 impl<T> QueryRowResult<T> {
      pub(crate) async fn new(
           query: String, 
-          connection: PooledConnection<AioDatabaseConnection>) -> Option<QueryRowResult<T>> { 
+          connection: &Connection) -> Option<QueryRowResult<T>> { 
           let sql_result = connection
                .query(&query, ())
                .await;
@@ -254,7 +253,7 @@ unsafe impl<T> Send for QueryRowsResult<T> { }
 impl<T> QueryRowsResult<T> {
      pub(crate) async fn new_many(
           query: String, 
-          connection: PooledConnection<AioDatabaseConnection>) -> Option<QueryRowsResult<T>> {
+          connection: &Connection) -> Option<QueryRowsResult<T>> {
           let sql_result = connection
                .query(&query, ())
                .await;

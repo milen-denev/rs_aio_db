@@ -31,7 +31,7 @@ fn create_db() {
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\create_db.db");
 
-          _ = AioDatabase::create::<Person>("C:\\Tests\\".into(), "create_db".into(), 15).await;
+          _ = AioDatabase::create::<Person>("C:\\Tests\\".into(), "create_db".into()).await;
           let result = fs::File::open("C:\\Tests\\create_db.db");
 
           assert_eq!(result.is_ok(), true);
@@ -44,7 +44,7 @@ fn insert_value() {
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\insert_value.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "insert_value".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "insert_value".into()).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -80,7 +80,7 @@ fn update_value() {
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\update_value.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "update_value".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "update_value".into()).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -122,7 +122,7 @@ fn retrieve_single_value() {
     let rt = runtime::Builder::new_current_thread().build().unwrap();
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\retrieve_single_value.db");
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "retrieve_single_value".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "retrieve_single_value".into()).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -169,7 +169,7 @@ fn retrieve_all_values() {
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\retrieve_all_values.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "retrieve_all_values".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "retrieve_all_values".into()).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -241,7 +241,7 @@ fn delete_all_values() {
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\delete_all_values.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "delete_all_values".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "delete_all_values".into()).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -303,7 +303,7 @@ fn contains_values() {
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\contains_values.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "contains_values".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "contains_values".into()).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -381,7 +381,7 @@ fn starts_with_values() {
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\starts_with_values.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "starts_with_values".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "starts_with_values".into()).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -459,7 +459,7 @@ fn ends_with_values() {
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\ends_with_values.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "ends_with_values".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "ends_with_values".into()).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -537,7 +537,7 @@ fn any() {
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\any.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "any".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "any".into()).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -614,7 +614,7 @@ fn all() {
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\all0.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "all0".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "all0".into()).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -691,7 +691,7 @@ fn count() {
     rt.block_on(async { 
           _ = fs::remove_file("C:\\Tests\\count.db");
 
-          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "count".into(), 15).await;
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "count".into()).await;
 
           let mut hash_map = HashMap::new();
           hash_map.insert("Key".into(), "Value1".into());
@@ -769,7 +769,7 @@ fn create_unique_index() {
         _ = fs::remove_file("C:\\Tests\\create_unique_index.db");
         _ = fs::create_dir("C:\\Tests\\");
         
-        let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "create_unique_index".into(), 15).await;
+        let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "create_unique_index".into()).await;
 
         _ = file_db.create_unique_index::<Person>("first_name_unique", vec!["first_name".into()]).await;
         _ = file_db.create_unique_index::<Person>("id_unique", vec!["id".into()]).await;
@@ -786,7 +786,7 @@ fn create_index() {
         _ = fs::remove_file("C:\\Tests\\create_index.db");
         _ = fs::create_dir("C:\\Tests\\");
         
-        let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "create_index".into(), 15).await;
+        let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "create_index".into()).await;
 
         _ = file_db.create_index::<Person>("first_name_unique", vec!["first_name".into()]).await;
         _ = file_db.create_index::<Person>("id_unique", vec!["id".into()]).await;
@@ -802,7 +802,7 @@ fn drop_index() {
         _ = fs::remove_file("C:\\Tests\\drop_index.db");
         _ = fs::create_dir("C:\\Tests\\");
 
-        let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "drop_index".into(), 15).await;
+        let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "drop_index".into()).await;
         
         _ = file_db.create_unique_index::<Person>("first_name_unique", vec!["first_name".into()]).await;
         _ = file_db.create_unique_index::<Person>("id_unique", vec!["id".into()]).await;
@@ -819,7 +819,7 @@ fn drop_index() {
 //     rt.block_on(async { 
 //         _ = fs::remove_file("C:\\Tests\\insert_concurrent_value.db");
 
-//         let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "insert_concurrent_value".into(), 15).await;
+//         let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "insert_concurrent_value".into()).await;
 
 //         let mut hash_map = HashMap::new();
 //         hash_map.insert("Key".into(), "Value1".into());
@@ -855,7 +855,7 @@ fn drop_index() {
 //     rt.block_on(async { 
 //           _ = fs::remove_file("C:\\Tests\\update_concurrent_value.db");
 
-//           let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "update_concurrent_value".into(), 15).await;
+//           let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "update_concurrent_value".into()).await;
 
 //           let mut hash_map = HashMap::new();
 //           hash_map.insert("Key".into(), "Value1".into());

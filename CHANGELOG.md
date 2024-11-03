@@ -1,5 +1,11 @@
 # Aio Database Release Notes
 
+### v0.7.12
+- Update dependencies
+- Internal updates and refactoring
+- Fix libsql dependencies and default features
+- Remove features that are not supported by libsql on all platforms
+
 ### v0.7.11
 - Update dependencies
 - Rollback multiple types in `INTEGER` type mapping

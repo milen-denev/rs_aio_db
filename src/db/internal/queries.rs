@@ -4,8 +4,7 @@ use bevy_reflect::Struct;
 use hex::encode;
 use libsql::Connection;
 use log::{error, trace};
-use r2d2::PooledConnection;
-use crate::db::{aio_database::AioDatabaseConnection, aio_query::{QueryBuilder, QueryRowResult, QueryRowsResult}, internal::helpers::{get_values_from_generic, query_match_operators}, models::Schema, _WalMode};
+use crate::db::{aio_query::{QueryBuilder, QueryRowResult, QueryRowsResult}, internal::helpers::{get_values_from_generic, query_match_operators}, models::Schema};
 use super::{helpers::set_values_from_row_result, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
 
 static SLEEP_DURATION: Duration = Duration::from_millis(10); //Retry every 10ms
@@ -21,36 +20,16 @@ pub(crate) async fn create_table(schema_vec: &Vec<Schema>, name: &str, connectio
 pub(crate) async fn change_db_settings(connection: &Connection) {
      let wal_query = format!("PRAGMA journal_mode=WAL;");
 
-     _ = connection.execute_batch(&wal_query)
+     _ = connection.execute(&wal_query, ())
           .await;
 
-     _ = connection.execute_batch("PRAGMA journal_size_limit=-1;")
+     _ = connection.execute("PRAGMA journal_size_limit=-1;", ())
           .await;
 
-     _ = connection.execute_batch("PRAGMA auto_vacuum=FULL;")
+     _ = connection.execute("PRAGMA auto_vacuum=FULL;", ())
           .await;
 
-     _ = connection.execute_batch("PRAGMA temp_store=MEMORY;")
-          .await;
-}
-
-pub(crate) async fn _set_wal_mode(connection: &Connection, wal_mode: _WalMode) -> Result<(), String> {
-     let query = format!("PRAGMA journal_mode={};", wal_mode.to_string());
-     trace!("Executing insert query: {}", query);
-     let result = connection.execute(&query, ())
-          .await;
-
-     if let Ok(_) = result {
-          Ok(())
-     } else {
-          Err(result.unwrap_err().to_string())
-     }
-}
-
-pub(crate) async fn set_wal_mode_to_rollback(connection: &Connection) {
-     let query = format!("PRAGMA journal_mode=DELETE;");
-     trace!("Executing insert query: {}", query);
-     _ = connection.execute_batch(&query)
+     _ = connection.execute("PRAGMA temp_store=MEMORY;", ())
           .await;
 }
 
@@ -119,7 +98,7 @@ pub(crate) async fn alter_table_drop_column(name: &str, column_name: &str, conne
 pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
      value: &T, 
      table_name: &str, 
-     connection: PooledConnection<AioDatabaseConnection>, 
+     connection: &Connection, 
      time_to_retry: u32, 
      concurrent: bool) -> 
      Result<(), ()>
@@ -300,7 +279,7 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
      value: &T, 
      table_name: &str, 
      where_query: &str, 
-     connection: PooledConnection<AioDatabaseConnection>,
+     connection: &Connection,
      time_to_retry: u32, 
      concurrent: bool) -> 
      Result<u64, ()> {
@@ -413,7 +392,7 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone> (
      field_value: String,
      table_name: &str, 
      where_query: &str, 
-     connection: PooledConnection<AioDatabaseConnection>,
+     connection: &Connection,
      time_to_retry: u32,
      concurrent: bool) -> 
      Result<u64, ()> {
@@ -469,7 +448,7 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone> (
 pub(crate) async fn delete_value<T:  Default + Struct + Clone> (
      table_name: &str, 
      where_query: &str, 
-     connection: PooledConnection<AioDatabaseConnection>,
+     connection: &Connection,
      time_to_retry: u32) ->
      Result<u64, ()> {
      let mut query = format!("DELETE FROM {} ", table_name);
