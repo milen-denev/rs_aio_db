@@ -15,7 +15,6 @@ description = "All in one (aka Aio) database with async support. Based on libsql
 
 [dependencies]
 libsql = { version = "0.6", default-features = false, features = ["core"] }
-libsql-sys = { version = "0.8.0", default-features = false, features = ["api", "wal"] }
 bevy_reflect = "0.14" 
 tokio = { version = "1", features = ["full"] }
 log = "0.4"
