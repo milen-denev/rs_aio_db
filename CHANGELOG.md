@@ -1,5 +1,10 @@
 # Aio Database Release Notes
 
+### v0.7.13
+- Update dependencies
+- Internal small changes
+- Update documentation
+
 ### v0.7.12
 - Update dependencies
 - Internal updates and refactoring
