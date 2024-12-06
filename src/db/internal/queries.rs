@@ -124,7 +124,7 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
 
      for generic_value in generic_values.iter().take(generic_values.len() - 1) {
           if generic_value.field_type == "Vec" {
-               let vec_u8 = generic_value.field_value.as_any().downcast_ref::<Vec<u8>>().unwrap();
+               let vec_u8 = generic_value.field_value.try_downcast_ref::<Vec<u8>>().unwrap();
                let hex = encode(vec_u8);
                query.push_str(format!("x'{}'", hex).as_str());
                query.push(',');
@@ -160,7 +160,7 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
      let last = generic_values.last().unwrap();
 
      if last.field_type == "Vec" {
-          let vec_u8 = last.field_value.as_any().downcast_ref::<Vec<u8>>().unwrap();
+          let vec_u8 = last.field_value.try_downcast_ref::<Vec<u8>>().unwrap();
           let hex = encode(vec_u8);
           query.push_str(format!("x'{}'", hex).as_str());
           query.push(')');
@@ -298,7 +298,7 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
           let value = generic_value.field_value;
 
           if generic_value.field_type == "Vec" {
-               let vec_u8 = generic_value.field_value.as_any().downcast_ref::<Vec<u8>>().unwrap();
+               let vec_u8 = generic_value.field_value.try_downcast_ref::<Vec<u8>>().unwrap();
                let hex = encode(vec_u8);
                let set_query = format!("{} = x'{}'", name, hex);
                query.push_str(set_query.as_str());
@@ -333,7 +333,7 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
      let value = generic_value.field_value;
 
      if generic_value.field_type == "Vec" {
-          let vec_u8 = generic_value.field_value.as_any().downcast_ref::<Vec<u8>>().unwrap();
+          let vec_u8 = generic_value.field_value.try_downcast_ref::<Vec<u8>>().unwrap();
           let hex = encode(vec_u8);
           let set_query = format!("{} = x'{}'", name, hex);
           query.push_str(set_query.as_str());

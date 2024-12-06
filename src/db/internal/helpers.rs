@@ -40,7 +40,7 @@ pub(crate) fn get_schema_from_generic<T:  Default + Struct>() -> Box<Vec<Schema>
      return schema_vec;
 }
 
-pub(crate) fn get_values_from_generic<'a, T:  Default + Struct + Clone>(value: &'a T) -> Vec<GenericValue> {  
+pub(crate) fn get_values_from_generic<'a, T:  Default + Struct + Clone>(value: &'a T) -> Vec<GenericValue<'a>> {  
      let copied_value = value.clone();
      let my_struct: Box<dyn Struct> = Box::new(copied_value);
 

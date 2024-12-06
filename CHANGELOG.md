@@ -1,5 +1,10 @@
 # Aio Database Release Notes
 
+### v0.7.14
+- Update dependencies
+- Small bug fix in local_db creation
+- Update bevy to 0.15
+
 ### v0.7.13
 - Update dependencies
 - Internal small changes

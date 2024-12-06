@@ -1,4 +1,4 @@
-use bevy_reflect::Reflect;
+use bevy_reflect::PartialReflect;
 
 #[derive(Default, Clone, Debug)]
 pub struct Schema {
@@ -9,6 +9,6 @@ pub struct Schema {
 #[derive(Debug)]
 pub struct GenericValue<'a> {
      pub field_name: String,
-     pub field_value: &'a dyn Reflect,
+     pub field_value: &'a dyn PartialReflect,
      pub field_type: String
 }
