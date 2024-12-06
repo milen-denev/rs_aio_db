@@ -1,3 +1,5 @@
+use std::fs::create_dir;
+
 use bevy_reflect::Struct;
 use log::debug;
 use log::info;
@@ -114,7 +116,16 @@ pub(crate) struct AioDatabaseConnection {
 impl AioDatabase {
      /// Create a locally persisted database. Recommended to run `set_wal_mode` to WAL2 mode after creation.
      pub async fn create<'a, T>(location: String, name: String) -> AioDatabase  where T: Default + Struct + Clone  {       
-          let db_location = format!("{}{}{}{}", location, get_system_char_delimiter(), name, ".db");
+          let system_char_delimiter = get_system_char_delimiter();
+
+          _ = create_dir(location.clone());
+          
+          let db_location = if location.ends_with(system_char_delimiter) {
+               format!("{}{}{}", location, name, ".db")
+          } else {
+               format!("{}{}{}{}", location, get_system_char_delimiter(), name, ".db")
+          };
+
           let sqlite_connection = rusqlite::Connection::open(db_location).expect("Error opening a connection to this file.");
 
           let aio_conn = AioDatabaseConnection {

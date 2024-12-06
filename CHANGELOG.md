@@ -1,9 +1,16 @@
 # Aio Database Release Notes
 
+### v0.8.1
+- Update dependencies
+- Update to bevy 0.15
+- Small bug fix in local_db creation
+
 ### v0.8.0
 - Update dependencies
 - *MAJOR CHANGE:*Change the sqlite provider from libsql to rusqlite
 - Internal updates and refactoring
+- Update to bevy 0.15
+- Small bug fix in local_db creation
 
 ### v0.7.11
 - Update dependencies
