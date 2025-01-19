@@ -1,5 +1,9 @@
 # Aio Database Release Notes
 
+### v0.7.15
+- Fix critical bug and add tests cover up
+- Update dependencies
+
 ### v0.7.14
 - Update dependencies
 - Small bug fix in local_db creation

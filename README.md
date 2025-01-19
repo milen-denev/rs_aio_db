@@ -40,10 +40,10 @@ I created my own copycat of cp, [rust_cp](https://github.com/milen-denev/rust_cp
 ### cargo.toml
 ```TOML
 [dependencies]
-rs_aio_db = "0.7.14"
+rs_aio_db = "0.7.15"
 env_logger = "0.11"
 tokio = "1"
-bevy_reflect = "0.14"
+bevy_reflect = "0.15.1"
 serde = "1.0"
 ```
 

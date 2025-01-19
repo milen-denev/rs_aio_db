@@ -221,11 +221,13 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
 pub(crate) fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder: &'a QueryBuilder<'_>) -> String {    
      let options = &query_builder.query_options;
      let table_name = &query_builder.table_name;
-     let mut query = format!("SELECT * FROM {table_name} WHERE ");
+     let mut query = format!("SELECT * FROM {table_name}");
 
      let schema = query_builder.db.get_schema();
 
      let len = options.len();
+
+     query.push_str(" WHERE ");
 
      if len > 1 {
           for option in options.iter().take(options.iter().len() - 1) {
@@ -234,16 +236,14 @@ pub(crate) fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder
                let operator = option.operator.as_ref().unwrap();
                query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, false, Some(next));
           }
-     }
+     } 
 
-     if len > 0 {
-          let option = options.iter().last().unwrap();
+     let option = options.iter().last().unwrap();
 
-          let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
-          let next = option.next.as_ref().unwrap();
-          let operator = option.operator.as_ref().unwrap();
-          query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, true, Some(next));     
-     }
+     let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
+     let next = option.next.as_ref().unwrap();
+     let operator = option.operator.as_ref().unwrap();
+     query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, true, Some(next));     
 
      trace!("Executing get query: {}", query);
 
