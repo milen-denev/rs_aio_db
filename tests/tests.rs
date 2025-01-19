@@ -4,7 +4,7 @@ use rs_aio_db::{db::{aio_database::AioDatabase, aio_query::Operator, WalMode}, R
 use serde::{Deserialize, Serialize};
 use tokio::runtime;
 
-#[derive(Default, Clone, Debug, Reflect)]
+#[derive(Default, Clone, Debug, Reflect, PartialEq)]
 struct Person {
     id: u32,
     first_name: String,
@@ -380,6 +380,86 @@ fn contains_values() {
                .query()
                .field("comments")
                .where_is(Operator::Contains(("CoLd").to_string()), None)
+               .get_single_value::<Person>()
+               .await
+               .unwrap();
+
+          assert_eq!(retrieved_person.id, 655);
+    });
+}
+
+#[test]
+fn contains_values_2() {
+    let rt = runtime::Builder::new_current_thread().build().unwrap();
+    rt.block_on(async { 
+          _ = fs::remove_file("C:\\Tests\\contains_values_2.db");
+
+          let file_db = AioDatabase::create::<Person>("C:\\Tests\\".into(), "contains_values_2".into()).await;
+
+          let mut hash_map = HashMap::new();
+          hash_map.insert("Key".into(), "Value1".into());
+
+          let person = Person {
+               id: 0,
+               first_name: "Mylo".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It's very hot up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          let person3 = Person {
+               id: 1,
+               first_name: "Mylo 2".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It's very warm up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          let person2 = Person {
+               id: 655,
+               first_name: "Mylo 2".into(),
+               last_name: "Lastnamsky".into(),
+               age: 50,
+               height: 2.10,
+               married: true,
+               address: "North Pole, Ice Street 0, NP0001".into(),
+               date_of_birth: 1000000,
+               comments: "It's very CoLd up there. Send help!".into(),
+               some_blob: AioDatabase::get_bytes(AnotherStruct {
+                   data_1: 5,
+                   data_2: 10.4,
+                   data_3:  hash_map.clone()
+               })
+          };
+
+          _ = file_db.insert_value(&person).await;
+          _ = file_db.insert_value(&person2).await;
+          _ = file_db.insert_value(&person3).await;
+
+          let retrieved_person = file_db
+               .query()
+               .field("comments")
+               .where_is(Operator::Contains(("CoLd").to_string()), None)
+               .field("last_name")
+               .where_is(Operator::Eq(("Lastnamsky").to_string()), None)
                .get_single_value::<Person>()
                .await
                .unwrap();

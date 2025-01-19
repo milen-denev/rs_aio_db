@@ -229,25 +229,23 @@ pub(crate) fn generate_get_query<'a, T:  Default + Struct + Clone>(query_builder
 
      let len = options.len();
 
+     query.push_str(" WHERE ");
+
      if len > 1 {
-          query.push_str(" WHERE ");
           for option in options.iter().take(options.iter().len() - 1) {
                let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
                let next = option.next.as_ref().unwrap();
                let operator = option.operator.as_ref().unwrap();
                query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, false, Some(next));
           }
-     }
+     } 
 
-     if len > 0 {
-          query.push_str(" WHERE ");
-          let option = options.iter().last().unwrap();
+     let option = options.iter().last().unwrap();
 
-          let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
-          let next = option.next.as_ref().unwrap();
-          let operator = option.operator.as_ref().unwrap();
-          query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, true, Some(next));     
-     }
+     let current = schema.iter().find(|x| x.field_name == option.field_name).unwrap();
+     let next = option.next.as_ref().unwrap();
+     let operator = option.operator.as_ref().unwrap();
+     query_match_operators(operator,  &mut query, &option.field_name, &current.field_type, true, Some(next));     
 
      trace!("Executing get query: {}", query);
 

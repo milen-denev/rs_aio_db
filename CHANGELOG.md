@@ -1,5 +1,9 @@
 # Aio Database Release Notes
 
+### v0.8.2
+- Fix critical bug and add tests cover up
+- Update dependencies
+
 ### v0.8.1
 - Update dependencies
 - Update to bevy 0.15
