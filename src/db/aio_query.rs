@@ -1,7 +1,7 @@
 use core::str;
 
-use bevy_reflect::{Reflect, Struct};
-use rusqlite::{Connection, Statement};
+use bevy_reflect::{Reflect, ReflectMut, Struct};
+use tokio_rusqlite::{Connection, Row};
 
 use super::{aio_database::AioDatabase, internal::queries::{generate_get_query, generate_where_query}};
 
@@ -199,58 +199,68 @@ impl QueryOption<'_> {
      }
 }
 
-pub(crate) struct QueryRowResult<'a, T> {
+pub(crate) struct QueryRowResult<T> {
      pub value: Option<T>,
-     pub rows: Statement<'a>
 }
 
-unsafe impl<'a, T> Send for QueryRowResult<'a, T> { }
-
-impl<'a, T> QueryRowResult<'a, T> {
+impl<T: Default + Struct + Clone> QueryRowResult<T> {
      pub(crate) async fn new(
           query: String, 
-          connection: &'a Connection) -> Option<QueryRowResult<'a, T>> { 
-          let statement = connection.prepare(&query);
+          connection: &Connection) -> Option<QueryRowResult<T>> { 
           
-          if let Ok(sql_rows) = statement {
-
-               return Some(QueryRowResult::<'a, T> {
-                    value: None,
-                    rows: sql_rows
-               });
-          }
-          else {
-               return None
+          let result = connection.call(move |conn| {
+               let mut stmt = conn.prepare(&query)?;
+               let mut rows = stmt.query([])?;
+               
+               if let Some(row) = rows.next()? {
+                    let mapped_value = map_row_to_struct::<T>(row)?;
+                    Ok(Some(mapped_value))
+               } else {
+                    Ok(None)
+               }
+          }).await;
+          
+          match result {
+               Ok(value) => Some(QueryRowResult { value }),
+               Err(_) => None
           }
      }
 }
 
-pub(crate) struct QueryRowsResult<'a, T> {
-     pub _value: Option<Vec<T>>,
-     pub rows: Statement<'a>
+pub(crate) struct QueryRowsResult<T> {
+     pub value: Option<Vec<Result<T, Error>>>,
 }
 
-unsafe impl<'a, T> Send for QueryRowsResult<'a, T> { }
-
-impl<'a, T> QueryRowsResult<'a, T> {
+impl<T: Default + Struct + Clone> QueryRowsResult<T> {
      pub(crate) async fn new_many(
           query: String, 
           connection: &Connection) -> Option<QueryRowsResult<T>> {
-          let statement = connection.prepare(&query);
-
-          if let Ok(sql_rows) = statement {
-               if sql_rows.column_count() > 0 {
-                    return Some(QueryRowsResult::<T> {
-                         _value: None,
-                         rows: sql_rows
-                    });
+          
+          let result = connection.call(move |conn| {
+               let mut stmt = conn.prepare(&query)?;
+               let rows = stmt.query_map([], |row| {
+                    Ok(map_row_to_struct::<T>(row))
+               })?;
+               
+               let mut results = Vec::new();
+               
+               for row_result in rows {
+                    match row_result {
+                         Ok(mapped_value) => results.push(mapped_value),
+                         Err(e) => return Err(e.into())
+                    }
                }
-               else {
-                    return None
+               
+               if results.is_empty() {
+                    Ok(None)
+               } else {
+                    Ok(Some(results))
                }
-          }
-          else {
-               return None
+          }).await;
+          
+          match result {
+               Ok(value) => Some(QueryRowsResult { value }),
+               Err(_) => None
           }
      }
 }
@@ -258,4 +268,133 @@ impl<'a, T> QueryRowsResult<'a, T> {
 #[derive(Default, Reflect, Clone)]
 pub(crate) struct AnyCountResult {
      pub count_total: u64
+}
+
+use bevy_reflect::GetField;
+use tokio_rusqlite::Error;
+
+// Helper function to map rusqlite::Row to Bevy Struct using reflection
+fn map_row_to_struct<T: Default + Struct + Clone>(row: &Row) -> Result<T, Error> {
+     let mut instance = T::default();
+
+     let mut struct_mut2: Box<dyn Struct> = Box::new(T::default());
+     let ReflectMut::Struct(reflected2) = struct_mut2.reflect_mut() else { unreachable!() };
+     let struct_immutable: Box<dyn Struct> = Box::new(T::default());
+
+     for (index, field) in struct_immutable.iter_fields().enumerate() {
+          let field_type = field.reflect_type_ident().unwrap();
+          let field_name = reflected2.name_at(index).clone().unwrap();
+
+          // Try to get the value from the row by field name first, then by index
+          match field_type {
+               "bool" => {
+                    let value: Result<i32, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         let bool_value = sql_value != 0;
+                         *instance.get_field_mut::<bool>(field_name).unwrap() = bool_value;
+                    }
+               },
+               "u8" => {
+                    let value: Result<i64, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         *instance.get_field_mut::<u8>(field_name).unwrap() = sql_value as u8;
+                    }
+               },
+               "u16" => {
+                    let value: Result<i64, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         *instance.get_field_mut::<u16>(field_name).unwrap() = sql_value as u16;
+                    }
+               },
+               "u32" => {
+                    let value: Result<i64, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         *instance.get_field_mut::<u32>(field_name).unwrap() = sql_value as u32;
+                    }
+               },
+               "u64" => {
+                    let value: Result<i64, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         *instance.get_field_mut::<u64>(field_name).unwrap() = sql_value as u64;
+                    }
+               },
+               "i8" => {
+                    let value: Result<i64, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         *instance.get_field_mut::<i8>(field_name).unwrap() = sql_value as i8;
+                    }
+               },
+               "i16" => {
+                    let value: Result<i64, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         *instance.get_field_mut::<i16>(field_name).unwrap() = sql_value as i16;
+                    }
+               },
+               "i32" => {
+                    let value: Result<i32, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         *instance.get_field_mut::<i32>(field_name).unwrap() = sql_value;
+                    }
+               },
+               "i64" => {
+                    let value: Result<i64, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         *instance.get_field_mut::<i64>(field_name).unwrap() = sql_value;
+                    }
+               },
+               "f32" => {
+                    let value: Result<f64, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         *instance.get_field_mut::<f32>(field_name).unwrap() = sql_value as f32;
+                    }
+               },
+               "f64" => {
+                    let value: Result<f64, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         *instance.get_field_mut::<f64>(field_name).unwrap() = sql_value;
+                    }
+               },
+               "char" => {
+                    let value: Result<String, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         let char_value = sql_value.chars().next().unwrap_or(' ');
+                         *instance.get_field_mut::<char>(field_name).unwrap() = char_value;
+                    }
+               },
+               "String" => {
+                    let value: Result<String, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = value {
+                         // Create buffer similar to your existing code
+                         let mut buffer: Vec<u8> = Vec::new();
+                         buffer.extend_from_slice(sql_value.as_bytes());
+                         let string_value = String::from_utf8_lossy(&buffer).into_owned();
+                         *instance.get_field_mut::<String>(field_name).unwrap() = string_value;
+                    }
+               },
+               "Vec" => {
+                    // Handle Vec<u8> stored as BLOB or hex string
+                    let blob_result: Result<Vec<u8>, _> = row.get(field_name).or_else(|_| row.get(index));
+                    if let Ok(sql_value) = blob_result {
+                         let mut buffer: Vec<u8> = Vec::new();
+                         buffer.extend_from_slice(&sql_value);
+                         *instance.get_field_mut::<Vec<u8>>(field_name).unwrap() = buffer;
+                    } else {
+                         // Try as hex string if BLOB retrieval fails
+                         let string_result: Result<String, _> = row.get(field_name).or_else(|_| row.get(index));
+                         if let Ok(hex_string) = string_result {
+                              if let Ok(decoded) = hex::decode(&hex_string) {
+                                   let mut buffer: Vec<u8> = Vec::new();
+                                   buffer.extend_from_slice(&decoded);
+                                   *instance.get_field_mut::<Vec<u8>>(field_name).unwrap() = buffer;
+                              }
+                         }
+                    }
+               },
+               _ => {
+                    panic!("{} type not supported.", field_type);
+               }
+          }
+     }
+
+    Ok(instance)
 }

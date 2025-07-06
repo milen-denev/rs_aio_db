@@ -5,7 +5,7 @@ use log::debug;
 use log::info;
 use serde::Deserialize;
 use serde::Serialize;
-use rusqlite::Connection as SqliteConnection;
+use tokio_rusqlite::Connection as SqliteConnection;
 
 use crate::db::internal::helpers::get_system_char_delimiter;
 use crate::db::internal::queries::alter_table_drop_column;
@@ -108,14 +108,19 @@ pub struct AioDatabase {
      schema: Box<Vec<Schema>>,
      retries: u32
 }
+unsafe impl Send for AioDatabase {}
+unsafe impl Sync for AioDatabase {}
 
 pub(crate) struct AioDatabaseConnection {
      sqlite_connection: SqliteConnection
 }
 
+unsafe impl Send for AioDatabaseConnection {}
+unsafe impl Sync for AioDatabaseConnection {}
+
 impl AioDatabase {
      /// Create a locally persisted database. Recommended to run `set_wal_mode` to WAL2 mode after creation.
-     pub async fn create<'a, T>(location: String, name: String) -> AioDatabase  where T: Default + Struct + Clone  {       
+     pub async fn create<'a, T>(location: String, name: String) -> AioDatabase  where T: Default + Struct + Clone + Send + Send {       
           let system_char_delimiter = get_system_char_delimiter();
 
           _ = create_dir(location.clone());
@@ -126,7 +131,7 @@ impl AioDatabase {
                format!("{}{}{}{}", location, get_system_char_delimiter(), name, ".db")
           };
 
-          let sqlite_connection = rusqlite::Connection::open(db_location).expect("Error opening a connection to this file.");
+          let sqlite_connection = tokio_rusqlite::Connection::open(db_location).await.expect("Error opening a connection to this file.");
 
           let aio_conn = AioDatabaseConnection {
                sqlite_connection: sqlite_connection
@@ -171,8 +176,8 @@ impl AioDatabase {
      }
 
      /// Create an in-memory database.
-     pub async fn create_in_memory<'a, T:  Default + Struct + Clone>(name: String) -> AioDatabase {
-          let sqlite_connection = rusqlite::Connection::open(":memory:").expect("Error opening a in-memory database.");
+     pub async fn create_in_memory<'a, T: Default + Struct + Clone + Send + Send>(name: String) -> AioDatabase {
+          let sqlite_connection = tokio_rusqlite::Connection::open(":memory:").await.expect("Error opening a in-memory database.");
 
           let aio_conn = AioDatabaseConnection {
                sqlite_connection: sqlite_connection
@@ -195,14 +200,14 @@ impl AioDatabase {
                for generic_field in generic_schema.iter() {
                     if !current_schema.iter().any(|x| x.field_name == generic_field.field_name) {
                          info!("Adding column: {} as {}", generic_field.field_name.as_str(), generic_field.field_type.as_str());
-                         alter_table_new_column(&name, generic_field, &aio_conn.sqlite_connection).await;
+                         alter_table_new_column(&name, generic_field,  &aio_conn.sqlite_connection).await;
                          continue;
                     }
                }
           }
           else {
                debug!("Creating table {} with schema: {:?}", name, generic_schema);
-               change_db_settings(&aio_conn.sqlite_connection).await;
+               change_db_settings( &aio_conn.sqlite_connection).await;
                create_table(&generic_schema, &name, &aio_conn.sqlite_connection).await;
           }
           
@@ -218,11 +223,13 @@ impl AioDatabase {
 
      /// Set `journal_mode` between WAL or WAL2. 
      pub async fn set_wal_mode(&self, wal_mode: WalMode) -> Result<(), String> {
+
           return set_wal_mode(&self.conn.sqlite_connection, wal_mode).await;
      }
 
      /// Set `journal_mode` to `delete` in order to be compatible to older SQLite versions or to change the mode to WAL2 from WAL.
      pub  async fn set_wal_mode_to_rollback(&self) {
+          
           _ = set_wal_mode_to_rollback(&self.conn.sqlite_connection).await;
      }
 
@@ -244,11 +251,13 @@ impl AioDatabase {
      /// If set_synchronous(true) then the PRAGMA synchronous will equal to NORMAL (recommended) or false for PRAGMA synchronous to equal to OFF. 
      /// That way transaction will be allowed to be asynchronous which may increase performance but in case of an accident the DB may be corrupted.
      pub async fn set_synchronous(&self, val: bool) {
+          
           change_synchronous_settings(&self.conn.sqlite_connection, val).await;
      }
 
      /// Inserts a **T** value in the database. Returns if the insertion was successful or not after certain retries.
-     pub async fn insert_value<'a, T:  Default + Struct + Clone>(&self, value: &T) -> Result<(), String> {
+     pub async fn insert_value<'a, T: Default + Struct + Clone + Send>(&self, value: &T) -> Result<(), String> {
+          
           let result = insert_value::<T>(&value, self.get_name(), &self.conn.sqlite_connection, self.retries, false).await;
           if let Ok(result) = result {
                return Ok(result);
@@ -261,7 +270,8 @@ impl AioDatabase {
      }
 
      /// Inserts a **T** value in the database concurrently. Returns if the insertion was successful or not after certain retries.
-     pub(crate) async fn _insert_value_concurrent<'a, T:  Default + Struct + Clone>(&self, value: &T) -> Result<(), String> {
+     pub(crate) async fn _insert_value_concurrent<'a, T: Default + Struct + Clone + Send>(&self, value: &T) -> Result<(), String> {
+          
           let result = insert_value::<T>(&value, self.get_name(), &self.conn.sqlite_connection, self.retries, true).await;
           if let Ok(result) = result {
                return Ok(result);
@@ -282,7 +292,8 @@ impl AioDatabase {
           }
      }
      
-     pub(crate) async fn get_single_value<'a, T: Default + Struct + Clone>(&self, query_string: String) -> Option<T> {
+     pub(crate) async fn get_single_value<'a, T: Default + Struct + Clone + Send>(&self, query_string: String) -> Option<T> {
+          
           if let Some(mut query_result) = QueryRowResult::<T>::new(query_string, &self.conn.sqlite_connection).await {
                get_single_value::<T>(&mut query_result);
                return query_result.value;
@@ -292,8 +303,9 @@ impl AioDatabase {
           }
      }
 
-     pub(crate) async fn get_many_values<'a, T: Default + Struct + Clone>(&self, query_string: String) -> Option<Vec<T>> {
-          if let Some(query_result) = QueryRowsResult::<'a, T>::new_many(query_string, &self.conn.sqlite_connection).await {
+     pub(crate) async fn get_many_values<T: Default + Struct + Clone + Send>(&self, query_string: String) -> Option<Vec<T>> {
+          
+          if let Some(query_result) = QueryRowsResult::<T>::new_many(query_string, &self.conn.sqlite_connection).await {
                let result = get_many_values::<T>(query_result).await;
                return result;
           }
@@ -302,7 +314,8 @@ impl AioDatabase {
           }
      }
 
-     pub(crate) async fn update_value<'a, T: Default + Struct + Clone>(&self, value: T, where_query: String) -> Result<usize, String> {
+     pub(crate) async fn update_value<'a, T: Default + Struct + Clone + Send>(&self, value: T, where_query: String) -> Result<usize, String> {
+          
           let result = update_value::<T>(&value, self.get_name(), &where_query, &self.conn.sqlite_connection, self.retries, false).await;
           if let Ok(result) = result {
                return Ok(result);
@@ -314,7 +327,8 @@ impl AioDatabase {
           }
      }
 
-     pub(crate) async fn update_value_concurrent<'a, T: Default + Struct + Clone>(&self, value: T, where_query: String) -> Result<usize, String> {
+     pub(crate) async fn update_value_concurrent<'a, T: Default + Struct + Clone + Send>(&self, value: T, where_query: String) -> Result<usize, String> {
+          
           let result = update_value::<T>(&value, self.get_name(), &where_query, &self.conn.sqlite_connection, self.retries, true).await;
           if let Ok(result) = result {
                return Ok(result);
@@ -326,7 +340,8 @@ impl AioDatabase {
           }
      }
 
-     pub(crate) async fn partial_update<'a, T: Default + Struct + Clone>(&self, field_name: String, field_value: String, where_query: String) ->  Result<usize, String> {
+     pub(crate) async fn partial_update<'a, T: Default + Struct + Clone + Send>(&self, field_name: String, field_value: String, where_query: String) ->  Result<usize, String> {
+          
           let result = partial_update::<T>(field_name, field_value, self.get_name(), &where_query, &self.conn.sqlite_connection, self.retries, false).await;
           if let Ok(result) = result {
                return Ok(result);
@@ -338,7 +353,8 @@ impl AioDatabase {
           }
      }
 
-     pub(crate) async fn partial_update_concurrent<'a, T: Default + Struct + Clone>(&self, field_name: String, field_value: String, where_query: String) ->  Result<usize, String> {
+     pub(crate) async fn partial_update_concurrent<'a, T: Default + Struct + Clone + Send>(&self, field_name: String, field_value: String, where_query: String) ->  Result<usize, String> {
+          
           let result = partial_update::<T>(field_name, field_value, self.get_name(), &where_query, &self.conn.sqlite_connection, self.retries, true).await;
           if let Ok(result) = result {
                return Ok(result);
@@ -350,7 +366,8 @@ impl AioDatabase {
           }
      }
 
-     pub(crate) async fn delete_value<'a, T: Default + Struct + Clone>(&self, where_query: String) -> Result<usize, String> {
+     pub(crate) async fn delete_value<'a, T: Default + Struct + Clone + Send>(&self, where_query: String) -> Result<usize, String> {
+          
           let result = delete_value::<T>(self.get_name(), &where_query, &self.conn.sqlite_connection, self.retries).await;
           if let Ok(result) = result {
                return Ok(result);
@@ -362,7 +379,7 @@ impl AioDatabase {
           }
      }
 
-     pub(crate) async fn any<'a, T: Default + Struct + Clone>(&self, where_query: String) -> bool {
+     pub(crate) async fn any<'a, T: Default + Struct + Clone + Send>(&self, where_query: String) -> bool {
           let query = any_count_query::<T>(self.get_name(), &where_query).await;
           
           if let Some(mut query_result) = QueryRowResult::<AnyCountResult>::new(query, &self.conn.sqlite_connection).await {
@@ -382,7 +399,7 @@ impl AioDatabase {
           }
      }
 
-     pub(crate) async fn count<'a, T: Default + Struct + Clone>(&self, where_query: String) -> u64 {
+     pub(crate) async fn count<'a, T: Default + Struct + Clone + Send>(&self, where_query: String) -> u64 {
           let query = any_count_query::<T>(self.get_name(), &where_query).await;
           
           if let Some(mut query_result) = QueryRowResult::<AnyCountResult>::new(query, &self.conn.sqlite_connection).await {
@@ -399,7 +416,7 @@ impl AioDatabase {
           }
      }
 
-     pub(crate) async fn all<'a, T: Default + Struct + Clone>(&self, where_query: String) -> bool {
+     pub(crate) async fn all<'a, T: Default + Struct + Clone + Send>(&self, where_query: String) -> bool {
           let all_query = all_query::<T>(self.get_name()).await;
           let any_query = any_count_query::<T>(self.get_name(), &where_query).await;
           
@@ -435,25 +452,26 @@ impl AioDatabase {
      }
 
      /// Create a non-unique index for a set of columns / struct fields if doesn't exist. Might lead to better performance.
-     pub async fn create_index<'a, T: Default + Struct + Clone> (
+     pub async fn create_index<'a, T: Default + Struct + Clone + Send> (
           &self,
           index_name: &str,
           columns: Vec<String>) -> Result<(), String> {
           let query = create_index::<T>(index_name, &self.name, columns);
-          
-          _ = &self.conn.sqlite_connection.execute(&query, ());
+
+          _ = self.conn.sqlite_connection.call(move |conn| { Ok(conn.execute(&query, ())) });
 
           Ok(())
      }
 
      /// Create a unique index for a set of columns / struct fields if doesn't exist. Might lead to better performance.
-     pub async fn create_unique_index<'a, T: Default + Struct + Clone> (
+     pub async fn create_unique_index<'a, T: Default + Struct + Clone + Send> (
           &self,
           index_name: &str,
           columns: Vec<String>) -> Result<(), String> {
           let query = create_unique_index::<T>(index_name, &self.name, columns);
           
-          _ = &self.conn.sqlite_connection.execute(&query, ());
+
+          _ = self.conn.sqlite_connection.call(move |conn| { Ok(conn.execute(&query, ())) });
 
           Ok(())
      }
@@ -464,7 +482,8 @@ impl AioDatabase {
           index_name: &str) -> Result<(), String> {
           let query = drop_index(index_name);
           
-          _ = &self.conn.sqlite_connection.execute(&query, ());
+
+          _ = self.conn.sqlite_connection.call(move |conn| { Ok(conn.execute(&query, ())) });
 
           Ok(())
      }

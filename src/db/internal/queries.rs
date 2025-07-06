@@ -5,34 +5,39 @@ use hex::encode;
 
 use log::{error, trace};
 
-use rusqlite::Connection;
+use tokio_rusqlite::{Connection, Error};
 
 use crate::db::{aio_query::{QueryBuilder, QueryRowResult, QueryRowsResult}, internal::helpers::{get_values_from_generic, query_match_operators}, models::Schema, WalMode};
-use super::{helpers::{set_values_from_many_rows_result, set_values_from_row_result}, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
+use super::{helpers::{set_values_from_row_result, set_values_from_many_rows_result}, schema_gen::{generate_db_schema_query, get_current_schema, get_sql_type}};
 
 static SLEEP_DURATION: Duration = Duration::from_millis(10); //Retry every 10ms
 
 pub(crate) async fn create_table(schema_vec: &Vec<Schema>, name: &str, connection: &Connection) {
      let create_table_query = generate_db_schema_query(schema_vec, name);
-     _ = connection.execute(&create_table_query, ());
+     let query = create_table_query.clone();
+     _ = connection.call(move |conn| {
+          Ok(conn.execute(&query, []))
+     }).await;
 }
 
 pub(crate) async fn change_db_settings(connection: &Connection) {
-     _ = connection.pragma_update(None, "journal_size_limit", "-1");
-
-     _ = connection.pragma_update(None, "synchronous", "NORMAL");
-
-     _ = connection.pragma_update(None, "auto_vacuum", "FULL");
-
-     _ = connection.pragma_update(None, "temp_store", "MEMORY");
-
-     _ = connection.pragma_update(None, "journal_mode", "WAL");
+     _ = connection.call(|conn| {
+          conn.pragma_update(None, "journal_size_limit", "-1")?;
+          conn.pragma_update(None, "synchronous", "NORMAL")?;
+          conn.pragma_update(None, "auto_vacuum", "FULL")?;
+          conn.pragma_update(None, "temp_store", "MEMORY")?;
+          conn.pragma_update(None, "journal_mode", "WAL")?;
+          Ok::<(), Error>(())
+     }).await;
 }
 
 pub(crate) async fn set_wal_mode(connection: &Connection, wal_mode: WalMode) -> Result<(), String> {
      let query = format!("PRAGMA journal_mode={};", wal_mode.to_string());
      trace!("Executing PRAGMA query: {}", query);
-     let result = connection.pragma_update(None, "journal_mode", "WAL");
+     
+     let result = connection.call(|conn| {
+          Ok(conn.pragma_update(None, "journal_mode", "WAL"))
+     }).await;
      
      if let Ok(_) = result {
           Ok(())
@@ -42,43 +47,38 @@ pub(crate) async fn set_wal_mode(connection: &Connection, wal_mode: WalMode) -> 
 }
 
 pub(crate) async fn set_wal_mode_to_rollback(connection: &Connection) {
-     _ = connection.pragma_update(None, "journal_mode", "DELETE");
+     _ = connection.call(|conn| {
+          Ok(conn.pragma_update(None, "journal_mode", "DELETE"))
+     }).await;
 }
 
 pub(crate) async fn change_synchronous_settings(connection: &Connection, val: bool) {
-     if !val {
-          _ = connection.pragma_update(None, "synchronous", "OFF");
-     }
-     else {
-          _ = connection.pragma_update(None, "synchronous", "NORMAL");
-     }
+     let sync_value = if !val { "OFF" } else { "NORMAL" };
+     _ = connection.call(move |conn| {
+          Ok(conn.pragma_update(None, "synchronous", sync_value))
+     }).await;
 }
 
 pub(crate) async fn get_current_db_schema(name: &str, connection: &Connection) -> Option<Vec<Schema>> {  
      let query = format!("SELECT sql FROM sqlite_schema WHERE name = '{}'", name);
-     trace!("Executing insert query: {}", query);
+     trace!("Executing schema query: {}", query);
      
-     let statement = connection.prepare(&query);
-
-     if let Ok(mut result_row) = statement {
-          let _ = result_row.execute(());
-
-          let mut rows_result = result_row.raw_query();
-
-          if let Ok(rows) = rows_result.next() {
-               if let Some(rows) = rows {
-                    let schema_row = rows.get::<_, String>(0).unwrap();
-                    let current_schema = get_current_schema(schema_row);
-                    return Some(current_schema);
-               } else {
-                    return None;
-               }
+     let result = connection.call(move |conn| {
+          let mut stmt = conn.prepare(&query)?;
+          let mut rows = stmt.query([])?;
+          
+          if let Some(row) = rows.next()? {
+               let schema_row: String = row.get(0)?;
+               let current_schema = get_current_schema(schema_row);
+               Ok(Some(current_schema))
           } else {
-               return None;
+               Ok(None)
           }
-     }
-     else {
-          return None;
+     }).await;
+     
+     match result {
+          Ok(schema) => schema,
+          Err(_) => None
      }
 }
 
@@ -87,14 +87,20 @@ pub(crate) async fn alter_table_new_column(name: &str, schema: &Schema, connecti
      let column_name = schema.field_name.as_str();
 
      let query = format!("ALTER TABLE {name} ADD COLUMN {column_name} {sql_type}");
-     trace!("Executing insert query: {}", query);
-     _ = connection.execute(&query, ());
+     trace!("Executing alter table query: {}", query);
+     
+     _ = connection.call(move |conn| {
+          Ok(conn.execute(&query, []))
+     }).await;
 }
 
 pub(crate) async fn alter_table_drop_column(name: &str, column_name: &str, connection: &Connection) {
      let query = format!("ALTER TABLE {name} DROP COLUMN {column_name}");
-     trace!("Executing insert query: {}", query);
-     _ = connection.execute(&query, ());
+     trace!("Executing alter table query: {}", query);
+     
+     _ = connection.call(move |conn| {
+          Ok(conn.execute(&query, []))
+     }).await;
 }
 
 pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
@@ -204,7 +210,10 @@ pub(crate) async fn insert_value<T:  Default + Struct + Clone>(
      let mut retries = 0;
 
      while retries < time_to_retry {
-         let function_result = connection.execute(&query, ());
+         let query_clone = query.clone();
+         let function_result = connection.call(move |conn| {
+              Ok(conn.execute(&query_clone, []))
+         }).await.unwrap();
  
          if function_result.is_ok() {
              return Ok(());
@@ -373,7 +382,10 @@ pub(crate) async fn update_value<T:  Default + Struct + Clone> (
      let mut retries = 0;
 
      while retries < time_to_retry {
-         let function_result = connection.execute(&query, ());
+         let query_clone = query.clone();
+         let function_result = connection.call(move |conn| {
+              Ok(conn.execute(&query_clone, []))
+         }).await.unwrap();
  
          if function_result.is_ok() {
              return Ok(function_result.unwrap());
@@ -431,7 +443,10 @@ pub(crate) async fn partial_update<T:  Default + Struct + Clone> (
      let mut retries = 0;
 
      while retries < time_to_retry {
-         let function_result = connection.execute(&query, ());
+         let query_clone = query.clone();
+         let function_result = connection.call(move |conn| {
+              Ok(conn.execute(&query_clone, []))
+         }).await.unwrap();
  
          if function_result.is_ok() {
              return Ok(function_result.unwrap());
@@ -461,7 +476,10 @@ pub(crate) async fn delete_value<T:  Default + Struct + Clone> (
      let mut retries = 0;
 
      while retries < time_to_retry {
-         let function_result = connection.execute(&query, ());
+         let query_clone = query.clone();
+         let function_result = connection.call(move |conn| {
+              Ok(conn.execute(&query_clone, []))
+         }).await.unwrap();
  
          if function_result.is_ok() {
              return Ok(function_result.unwrap());
@@ -505,7 +523,7 @@ pub(crate) fn get_single_value<'a, T:  Default + Struct + Clone>(query_result: &
      }
 }
 
-pub(crate) async fn get_many_values<'a, T:  Default + Struct + Clone>(mut query_result: QueryRowsResult<'a, T>) -> Option<Vec<T>>  { 
+pub(crate) async fn get_many_values<T:  Default + Struct + Clone>(mut query_result: QueryRowsResult<T>) -> Option<Vec<T>>  { 
      if let Ok(result) = set_values_from_many_rows_result::<T>(&mut query_result)  {
           Some(result)
      } else {

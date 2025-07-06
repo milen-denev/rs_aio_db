@@ -9,7 +9,7 @@ mod model;
 #[tokio::main]
 async fn main() {
     unsafe { std::env::set_var("RUST_LOG", "error"); } 
-    env_logger::init();
+    //env_logger::init();
 
     _ = fs::remove_file("G:\\Test.db");
 
