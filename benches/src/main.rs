@@ -8,7 +8,7 @@ mod model;
 
 #[tokio::main]
 async fn main() {
-    std::env::set_var("RUST_LOG", "error");
+    unsafe { std::env::set_var("RUST_LOG", "error"); } 
     env_logger::init();
 
     _ = fs::remove_file("G:\\Test.db");
@@ -16,7 +16,7 @@ async fn main() {
     //Locally persisted database
     let file_db = AioDatabase::create::<Person>("G:\\".into(), "Test".into()).await;
 
-    let mut sw = stopwatch::Stopwatch::start_new();
+    //let mut sw = stopwatch::Stopwatch::start_new();
 
     const TOTAL_ITERATIONS: u32 = 10;
 
@@ -45,9 +45,9 @@ async fn main() {
         _ = file_db.insert_value(&person).await.unwrap();
     }
 
-    println!("Time elapsed for inserting {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
+    //println!("Time elapsed for inserting {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
 
-    sw.restart();
+    //sw.restart();
 
     for i in 0..TOTAL_ITERATIONS {
         let person = Person {
@@ -76,9 +76,9 @@ async fn main() {
             .unwrap();
     }
 
-    println!("Time elapsed for updating {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
+    //println!("Time elapsed for updating {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
 
-    sw.restart();
+    //sw.restart();
 
     for i in 0..TOTAL_ITERATIONS {
         let person = file_db
@@ -93,9 +93,9 @@ async fn main() {
         drop(test);
     }
 
-    println!("Time elapsed for retrieving one by one {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
+    //println!("Time elapsed for retrieving one by one {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
 
-    sw.restart();
+    //sw.restart();
 
     let persons = file_db
         .query()
@@ -112,5 +112,5 @@ async fn main() {
 
     println!("{:?}", persons);
 
-    println!("Time elapsed for retrieving at once {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
+    //println!("Time elapsed for retrieving at once {} persons: {}ms", TOTAL_ITERATIONS, sw.elapsed_ms());
 }
