@@ -1,5 +1,8 @@
 # Aio Database Release Notes
 
+### v0.8.4
+- Minor bug fixes
+
 ### v0.8.3
 - *MAJOR CHANGE*: change the sqlite provider from rsqlite to tokio-rusqlite
 - Major dependency update

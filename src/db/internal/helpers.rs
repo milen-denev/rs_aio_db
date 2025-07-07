@@ -145,85 +145,87 @@ pub(crate) fn set_values_from_many_rows_result<'a, T:  Default + Struct + Clone>
 
      let mut vec_t: Vec<T> = Vec::default();
 
-     let rows = row_result.value.as_ref().unwrap();
+     if let Some(rows) = row_result.value.as_ref() {
+          let count = rows.len();
+          let mut i = 0;
 
-     let count = rows.len();
-     let mut i = 0;
+          while i < count {
+               if let Some(row) = rows.get(i) {
+                    let row = row.as_ref().unwrap();
 
-     while i < count {
-          if let Some(row) = rows.get(i) {
-               let row = row.as_ref().unwrap();
+                    let mut t_struct = T::default();
 
-               let mut t_struct = T::default();
-
-               for (i, field) in struct_immutable.iter_fields().enumerate() {
-                    let field_type = field.reflect_type_ident().unwrap();
-                    let field_name = reflected2.name_at(i).clone().unwrap();
-     
-                    match field_type {
-                         "bool" => {
-                              *t_struct.get_field_mut::<bool>(field_name).unwrap() = match row.get_field::<bool>(field_name).unwrap_or(&false) {
-                                   false => false,
-                                   true => true
-                              };
-                         },
-                         "u8" => {
-                              *t_struct.get_field_mut::<u8>(field_name).unwrap() = *row.get_field::<u8>(field_name).unwrap_or(&0) as u8;
-                         },
-                         "u16" => {
-                              *t_struct.get_field_mut::<u16>(field_name).unwrap() = *row.get_field::<u16>(field_name).unwrap_or(&0) as u16;
-                         },
-                         "u32" => {
-                              *t_struct.get_field_mut::<u32>(field_name).unwrap() = *row.get_field::<u32>(field_name).unwrap_or(&0) as u32;
-                         },
-                         "u64" => {
-                              *t_struct.get_field_mut::<u64>(field_name).unwrap() = *row.get_field::<u64>(field_name).unwrap_or(&0) as u64;
-                         },
-                         "i8" => {
-                              *t_struct.get_field_mut::<i8>(field_name).unwrap() = *row.get_field::<i8>(field_name).unwrap_or(&0) as i8;
-                         },
-                         "i16" => {
-                              *t_struct.get_field_mut::<i16>(field_name).unwrap() = *row.get_field::<i16>(field_name).unwrap_or(&0) as i16;
-                         },
-                         "i32" => {
-                              *t_struct.get_field_mut::<i32>(field_name).unwrap() = *row.get_field::<i32>(field_name).unwrap_or(&0) as i32;
-                         },
-                         "i64" => {
-                              *t_struct.get_field_mut::<i64>(field_name).unwrap() = *row.get_field::<i64>(field_name).unwrap_or(&0) as i64;
-                         },
-                         "f32" => {
-                              *t_struct.get_field_mut::<f32>(field_name).unwrap() = *row.get_field::<f32>(field_name).unwrap_or(&0.00f32) as f32;
-                         },
-                         "f64" => {
-                              *t_struct.get_field_mut::<f64>(field_name).unwrap() = *row.get_field::<f64>(field_name).unwrap_or(&0.00f64) as f64;
-                         },
-                         "char" => {
-                              *t_struct.get_field_mut::<char>(field_name).unwrap() = *row.get_field::<char>(field_name).unwrap_or(&' ') as char;
-                         },
-                         "String" => {
-                              let mut buffer: Vec<u8> = Vec::new();
-                              buffer.extend_from_slice(row.get_field::<String>(field_name).unwrap_or(&"".into()).as_bytes());
-                              *t_struct.get_field_mut::<String>(field_name).unwrap() = String::from_utf8_lossy(&buffer).into_owned();
-                         },
-                         "Vec" => {
-                              let mut buffer: Vec<u8> = Vec::new();
-                              buffer.extend_from_slice(row.get_field::<String>(field_name).unwrap_or(&"".into()).as_bytes());
-                              //let vec_u8_data = hex::decode(value).unwrap();
-                              *t_struct.get_field_mut::<Vec<u8>>(field_name).unwrap() = buffer;
-                         },
-                         _ => panic!("{} type not supported.", field_type)
+                    for (i, field) in struct_immutable.iter_fields().enumerate() {
+                         let field_type = field.reflect_type_ident().unwrap();
+                         let field_name = reflected2.name_at(i).clone().unwrap();
+          
+                         match field_type {
+                              "bool" => {
+                                   *t_struct.get_field_mut::<bool>(field_name).unwrap() = match row.get_field::<bool>(field_name).unwrap_or(&false) {
+                                        false => false,
+                                        true => true
+                                   };
+                              },
+                              "u8" => {
+                                   *t_struct.get_field_mut::<u8>(field_name).unwrap() = *row.get_field::<u8>(field_name).unwrap_or(&0) as u8;
+                              },
+                              "u16" => {
+                                   *t_struct.get_field_mut::<u16>(field_name).unwrap() = *row.get_field::<u16>(field_name).unwrap_or(&0) as u16;
+                              },
+                              "u32" => {
+                                   *t_struct.get_field_mut::<u32>(field_name).unwrap() = *row.get_field::<u32>(field_name).unwrap_or(&0) as u32;
+                              },
+                              "u64" => {
+                                   *t_struct.get_field_mut::<u64>(field_name).unwrap() = *row.get_field::<u64>(field_name).unwrap_or(&0) as u64;
+                              },
+                              "i8" => {
+                                   *t_struct.get_field_mut::<i8>(field_name).unwrap() = *row.get_field::<i8>(field_name).unwrap_or(&0) as i8;
+                              },
+                              "i16" => {
+                                   *t_struct.get_field_mut::<i16>(field_name).unwrap() = *row.get_field::<i16>(field_name).unwrap_or(&0) as i16;
+                              },
+                              "i32" => {
+                                   *t_struct.get_field_mut::<i32>(field_name).unwrap() = *row.get_field::<i32>(field_name).unwrap_or(&0) as i32;
+                              },
+                              "i64" => {
+                                   *t_struct.get_field_mut::<i64>(field_name).unwrap() = *row.get_field::<i64>(field_name).unwrap_or(&0) as i64;
+                              },
+                              "f32" => {
+                                   *t_struct.get_field_mut::<f32>(field_name).unwrap() = *row.get_field::<f32>(field_name).unwrap_or(&0.00f32) as f32;
+                              },
+                              "f64" => {
+                                   *t_struct.get_field_mut::<f64>(field_name).unwrap() = *row.get_field::<f64>(field_name).unwrap_or(&0.00f64) as f64;
+                              },
+                              "char" => {
+                                   *t_struct.get_field_mut::<char>(field_name).unwrap() = *row.get_field::<char>(field_name).unwrap_or(&' ') as char;
+                              },
+                              "String" => {
+                                   let mut buffer: Vec<u8> = Vec::new();
+                                   buffer.extend_from_slice(row.get_field::<String>(field_name).unwrap_or(&"".into()).as_bytes());
+                                   *t_struct.get_field_mut::<String>(field_name).unwrap() = String::from_utf8_lossy(&buffer).into_owned();
+                              },
+                              "Vec" => {
+                                   let mut buffer: Vec<u8> = Vec::new();
+                                   buffer.extend_from_slice(row.get_field::<String>(field_name).unwrap_or(&"".into()).as_bytes());
+                                   //let vec_u8_data = hex::decode(value).unwrap();
+                                   *t_struct.get_field_mut::<Vec<u8>>(field_name).unwrap() = buffer;
+                              },
+                              _ => panic!("{} type not supported.", field_type)
+                         }
                     }
+          
+                    vec_t.push(t_struct);
+               } else {
+                    break;
                }
-     
-               vec_t.push(t_struct);
-          } else {
-               break;
+
+               i += 1;
           }
 
-          i += 1;
+          return Ok(vec_t);
      }
 
-     return Ok(vec_t);
+     return Ok(vec![]); // Return an empty vector if no rows are found.
 }
 
 pub(crate) fn get_next(next: &Next) -> String {
