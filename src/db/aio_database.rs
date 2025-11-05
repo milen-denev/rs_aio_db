@@ -284,7 +284,7 @@ impl AioDatabase {
      }
 
      /// Creates a QueryBuilder that allows to chain query filters for different field / columns.
-     pub fn query(&self) -> QueryBuilder {
+     pub fn query<'a>(&'a self) -> QueryBuilder<'a> {
           return QueryBuilder {
                table_name: self.get_name().to_string(),
                query_options: Vec::default(),
