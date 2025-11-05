@@ -1,5 +1,9 @@
 # Aio Database Release Notes
 
+### v0.8.5
+- Fixed a warning
+- Updated dependencies
+
 ### v0.8.4
 - Minor bug fixes
 
