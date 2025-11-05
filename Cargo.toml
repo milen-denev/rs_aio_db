@@ -3,7 +3,7 @@
 
 [package]
 name = "rs_aio_db"
-version = "0.8.4"
+version = "0.8.5"
 edition = "2024"
 repository = "https://github.com/milen-denev/rs_aio_db"
 license = "Apache-2.0"
@@ -14,7 +14,7 @@ description = "All in one (aka Aio) database with async support. Based on sqlite
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy_reflect = "0.16.1"
+bevy_reflect = "0.17"
 tokio = {version = "1" , features = ["full"] }
 log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
