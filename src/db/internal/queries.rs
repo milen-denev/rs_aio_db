@@ -545,7 +545,7 @@ pub(crate) fn create_unique_index<T:  Default + Struct + Clone> (
                panic!("One of the specified columns isn't field of the struct of type T provided.");
           }
           else {
-               break;
+               continue;
           }
      }
 
@@ -584,7 +584,7 @@ pub(crate) fn create_index<T:  Default + Struct + Clone> (
                panic!("One of the specified columns isn't field of the struct of type T provided.");
           }
           else {
-               break;
+               continue;
           }
      }
 
